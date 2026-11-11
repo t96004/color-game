@@ -162,14 +162,18 @@
           <i class="fa-solid fa-palette"></i>
           <span>國語文色彩詞彙極速辨識互動遊戲</span>
         </div>
-        <div class="flex items-center gap-2">
-          <button id="btn-open-bank" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition flex items-center gap-1.5 border border-slate-300">
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btn-open-bank" type="button" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition flex items-center gap-1.5 border border-slate-300">
             <i class="fa-solid fa-book-open"></i>
             <span>題庫與規則一覽 (18題)</span>
           </button>
-          <button id="btn-toggle-sound-home" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm transition flex items-center gap-1.5">
+          <button id="btn-test-sound" type="button" onclick="testAudioSystem()" class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm transition flex items-center gap-1.5 shadow-sm active:scale-95">
+            <i class="fa-solid fa-music"></i>
+            <span id="text-test-sound">🎵 點擊測試音效</span>
+          </button>
+          <button id="btn-toggle-sound-home" type="button" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm transition flex items-center gap-1.5">
             <i id="icon-sound-home" class="fa-solid fa-volume-high"></i>
-            <span id="text-sound-home">音效：開啟</span>
+            <span id="text-sound-home">🔊 音效開啟</span>
           </button>
         </div>
       </div>
@@ -416,14 +420,14 @@
               <div>
                 <div class="flex flex-wrap items-center gap-2">
                   <h4 id="single-fb-title" class="text-lg sm:text-2xl font-black">答對了！</h4>
-                  <span id="single-fb-delta" class="px-3 py-0.5 rounded-full text-sm sm:text-base font-black">+1 分</span>
-                  <span id="single-fb-total" class="text-xs sm:text-sm font-bold text-slate-600">（累積得分：1 分）</span>
+                  <span id="red-fb-badge" class="w-7 h-7 rounded-lg flex items-center justify-center font-black text-sm text-white">✓</span>
+                  <span id="red-fb-status" class="font-black text-sm sm:text-lg">答對了！</span>
                 </div>
-                <!-- 正確選項說明（包含色塊與答案文字） -->
-                <div id="single-fb-explanation" class="mt-1.5 flex flex-wrap items-center gap-2 text-xs sm:text-base font-bold text-slate-700">
-                  <span>正確答案：</span>
-                  <span id="single-fb-swatch" class="inline-block w-5 h-5 rounded-md border border-slate-400 shadow-inner"></span>
-                  <span id="single-fb-correct-text" class="font-black text-slate-900">淡青色</span>
+                <div class="flex items-center gap-1">
+                  <span id="red-fb-speed" class="hidden px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] sm:text-xs">
+                    ⚡搶答成功 +3
+                  </span>
+                  <span id="red-fb-delta" class="px-2.5 py-0.5 rounded-full font-black text-xs sm:text-sm">+1 分</span>
                 </div>
               </div>
             </div>
@@ -440,15 +444,15 @@
       <!-- ==================== 【兩人對戰模式】紅白雙欄作答區 ==================== -->
       <div id="arena-versus" class="hidden w-full h-full relative grid grid-cols-2 gap-3 sm:gap-6 items-stretch">
         
-        <!-- 左欄：紅隊 (RED TEAM) -->
-        <div id="red-team-column" class="bg-rose-50/90 border-2 sm:border-4 border-rose-500 rounded-3xl p-2.5 sm:p-4 flex flex-col justify-between relative shadow-md overflow-hidden">
-          <!-- 紅隊標頭與分數 -->
-          <div class="flex items-center justify-between bg-rose-600 text-white px-3 sm:px-4 py-2 rounded-2xl shadow-sm">
-            <div class="flex items-center gap-2">
-              <span class="w-7 h-7 rounded-lg bg-white text-rose-600 font-black flex items-center justify-center text-sm">紅</span>
-              <div>
-                <div class="font-black text-sm sm:text-lg leading-none">紅隊</div>
-                <div id="red-streak-text" class="text-[11px] text-rose-100 font-bold mt-0.5">準備搶答</div>
+                  <span id="white-fb-badge" class="w-7 h-7 rounded-lg flex items-center justify-center font-black text-sm text-white">✓</span>
+                  <span id="white-fb-status" class="font-black text-sm sm:text-lg">答對了！</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <span id="white-fb-speed" class="hidden px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] sm:text-xs">
+                    ⚡搶答成功 +3
+                  </span>
+                  <span id="white-fb-delta" class="px-2.5 py-0.5 rounded-full font-black text-xs sm:text-sm">+1 分</span>
+                </div>
               </div>
             </div>
             <div class="text-right">
@@ -707,16 +711,31 @@
     ];
 
     /**************************************************************
-     * 2. Web Audio API 合成音效引擎（免外部音檔，100%即時回饋）
+     * 2. 響亮清晰的 Web Audio API 合成音效引擎（免外部音檔，100%即時回饋）
      **************************************************************/
     let soundEnabled = true;
     let audioCtx = null;
+    let masterGain = null;
 
+    // 初始化並解鎖瀏覽器 AudioContext（支援桌機、iOS Safari、Android 與觸控大屏）
     function ensureAudioContext() {
       if (!audioCtx) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (AudioContextClass) {
           audioCtx = new AudioContextClass();
+          // 加入動態壓縮器與主音量放大，確保音效響亮飽滿且不破音
+          const compressor = audioCtx.createDynamicsCompressor();
+          compressor.threshold.setValueAtTime(-18, audioCtx.currentTime);
+          compressor.knee.setValueAtTime(12, audioCtx.currentTime);
+          compressor.ratio.setValueAtTime(6, audioCtx.currentTime);
+          compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
+          compressor.release.setValueAtTime(0.15, audioCtx.currentTime);
+
+          masterGain = audioCtx.createGain();
+          masterGain.gain.setValueAtTime(0.95, audioCtx.currentTime);
+
+          masterGain.connect(compressor);
+          compressor.connect(audioCtx.destination);
         }
       }
       if (audioCtx && audioCtx.state === 'suspended') {
@@ -724,95 +743,190 @@
       }
     }
 
-    function playSound(type, streak = 1) {
+    // 綁定全域互動自動解鎖 AudioContext
+    ['pointerdown', 'touchstart', 'click', 'keydown'].forEach(evtName => {
+      window.addEventListener(evtName, () => {
+        if (soundEnabled) ensureAudioContext();
+      }, { passive: true });
+    });
+
+    // 基礎單音合成器輔助函式
+    function playTone({ freq, endFreq = null, type = 'sine', startTime = 0, duration = 0.15, volume = 0.4 }) {
       if (!soundEnabled) return;
-      try {
-        ensureAudioContext();
-        if (!audioCtx) return;
+      ensureAudioContext();
+      if (!audioCtx || !masterGain) return;
 
-        const now = audioCtx.currentTime;
+      const now = audioCtx.currentTime + startTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
 
-        if (type === 'correct') {
-          // 根據連勝次數提升音高，營造爽快感
-          const baseFreq = 523.25 * Math.pow(1.05, Math.min(streak - 1, 8));
-          const osc1 = audioCtx.createOscillator();
-          const osc2 = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+      if (endFreq !== null) {
+        osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), now + duration);
+      }
 
-          osc1.type = 'triangle';
-          osc2.type = 'sine';
-          osc1.frequency.setValueAtTime(baseFreq, now);
-          osc1.frequency.setValueAtTime(baseFreq * 1.25, now + 0.09);
-          osc2.frequency.setValueAtTime(baseFreq * 1.5, now + 0.18);
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(volume, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-          gain.gain.setValueAtTime(0.22, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+      osc.connect(gain);
+      gain.connect(masterGain);
 
-          osc1.connect(gain);
-          osc2.connect(gain);
-          gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + duration + 0.02);
+    }
 
-          osc1.start(now);
-          osc2.start(now + 0.09);
-          osc1.stop(now + 0.38);
-          osc2.stop(now + 0.38);
-        } else if (type === 'wrong') {
-          // 低沉雙音提示答錯或超時
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(190, now);
-          osc.frequency.linearRampToValueAtTime(130, now + 0.28);
+    // 1. 介面點擊音效 (playClick)：清脆木魚/按鍵短音
+    function playClick() {
+      playTone({ freq: 820, endFreq: 420, type: 'triangle', startTime: 0, duration: 0.065, volume: 0.45 });
+    }
 
-          gain.gain.setValueAtTime(0.18, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+    // 2. 遊戲開始音效 (playStart)：充滿活力的上行琶音 (C5-E5-G5-C6)
+    function playStart() {
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        playTone({ freq, type: 'triangle', startTime: idx * 0.075, duration: 0.22, volume: 0.5 });
+        playTone({ freq: freq * 1.5, type: 'sine', startTime: idx * 0.075, duration: 0.18, volume: 0.2 });
+      });
+    }
 
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(now);
-          osc.stop(now + 0.32);
-        } else if (type === 'lock') {
-          // 雙人模式點擊鎖定輕快短音
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(740, now);
-          gain.gain.setValueAtTime(0.12, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(now);
-          osc.stop(now + 0.08);
-        } else if (type === 'tick') {
-          // 倒數滴答聲
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(880, now);
-          gain.gain.setValueAtTime(0.05, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(now);
-          osc.stop(now + 0.04);
-        } else if (type === 'fanfare') {
-          // 遊戲結束勝利號角
-          const notes = [523.25, 659.25, 783.99, 1046.50];
-          notes.forEach((freq, idx) => {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(freq, now + idx * 0.11);
-            gain.gain.setValueAtTime(0.2, now + idx * 0.11);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.11 + 0.45);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(now + idx * 0.11);
-            osc.stop(now + idx * 0.11 + 0.45);
+    // 3. 3秒倒數滴答聲 (playTick)：剩餘1秒時提高音調加強緊張感
+    function playTick(isUrgent = false) {
+      if (isUrgent) {
+        playTone({ freq: 1180, endFreq: 880, type: 'triangle', startTime: 0, duration: 0.08, volume: 0.5 });
+        playTone({ freq: 1560, type: 'sine', startTime: 0, duration: 0.06, volume: 0.3 });
+      } else {
+        playTone({ freq: 880, endFreq: 660, type: 'sine', startTime: 0, duration: 0.06, volume: 0.38 });
+      }
+    }
+
+    // 4. 兩人模式鎖定作答音效 (playLock)：紅隊與白隊點擊選項鎖定時清脆提示
+    function playLock(team = 'red') {
+      const base = team === 'white' ? 987.77 : 880.0;
+      playTone({ freq: base, endFreq: base * 1.25, type: 'triangle', startTime: 0, duration: 0.08, volume: 0.48 });
+    }
+
+    // 5. 答對音效 (playCorrect)：響亮歡快的雙音色和弦上行叮咚聲 + 搶答成功閃亮音效
+    function playCorrect(streak = 1, hasFastestBonus = false, startOffset = 0) {
+      const pitchShift = Math.pow(1.045, Math.min(streak - 1, 8));
+      const f1 = 587.33 * pitchShift; // D5
+      const f2 = 880.00 * pitchShift; // A5
+      const f3 = 1174.66 * pitchShift; // D6
+
+      // 第一音（叮）
+      playTone({ freq: f1, type: 'triangle', startTime: startOffset, duration: 0.14, volume: 0.55 });
+      playTone({ freq: f2, type: 'sine', startTime: startOffset, duration: 0.14, volume: 0.38 });
+
+      // 第二音（咚—高音和弦）
+      playTone({ freq: f2, type: 'triangle', startTime: startOffset + 0.095, duration: 0.34, volume: 0.58 });
+      playTone({ freq: f3, type: 'sine', startTime: startOffset + 0.095, duration: 0.36, volume: 0.48 });
+
+      // 若有「最快答對+3」再疊加清脆閃亮高音琶音
+      if (hasFastestBonus) {
+        const sparkleNotes = [1318.51, 1567.98, 2093.00];
+        sparkleNotes.forEach((sf, i) => {
+          playTone({
+            freq: sf,
+            type: 'sine',
+            startTime: startOffset + 0.16 + i * 0.055,
+            duration: 0.2,
+            volume: 0.42
           });
-        }
-      } catch (e) {
-        // 忽略瀏覽器音效限制錯誤
+        });
+      }
+    }
+
+    // 6. 答錯或超時未答音效 (playWrong)：明顯的低音下行嗡嗡警示聲
+    function playWrong(startOffset = 0) {
+      if (!soundEnabled) return;
+      ensureAudioContext();
+      if (!audioCtx || !masterGain) return;
+
+      // 雙段低音下行鋸齒波與方波，辨識度極高
+      const notes = [
+        { fStart: 220, fEnd: 165, delay: 0, dur: 0.16 },
+        { fStart: 160, fEnd: 105, delay: 0.14, dur: 0.30 }
+      ];
+
+      notes.forEach(n => {
+        const now = audioCtx.currentTime + startOffset + n.delay;
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const filter = audioCtx.createBiquadFilter();
+        const gain = audioCtx.createGain();
+
+        osc1.type = 'sawtooth';
+        osc2.type = 'square';
+        osc1.frequency.setValueAtTime(n.fStart, now);
+        osc1.frequency.linearRampToValueAtTime(n.fEnd, now + n.dur);
+        osc2.frequency.setValueAtTime(n.fStart * 0.99, now);
+        osc2.frequency.linearRampToValueAtTime(n.fEnd * 0.99, now + n.dur);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(950, now);
+
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.45, now + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + n.dur);
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + n.dur + 0.02);
+        osc2.stop(now + n.dur + 0.02);
+      });
+    }
+
+    // 7. 兩人對戰開獎音效：支援雙對、雙錯、或一對一錯雙重回饋
+    function playVersusReveal(redCorrect, whiteCorrect, bestStreak = 1, hasFastest = false) {
+      if (redCorrect && whiteCorrect) {
+        playCorrect(bestStreak, hasFastest, 0);
+      } else if (!redCorrect && !whiteCorrect) {
+        playWrong(0);
+      } else {
+        // 一隊答對、一隊答錯：先播清脆答對音，緊接著短促答錯音，讓兩隊都能清楚聽見回饋
+        playCorrect(bestStreak, hasFastest, 0);
+        playWrong(0.28);
+      }
+    }
+
+    // 8. 時間到結算與勝利祝賀音效 (playVictory)：華麗的勝利號角琶音旋律
+    function playVictory() {
+      const fanfare = [
+        { freq: 523.25, time: 0.00, dur: 0.14 }, // C5
+        { freq: 523.25, time: 0.15, dur: 0.14 }, // C5
+        { freq: 523.25, time: 0.30, dur: 0.14 }, // C5
+        { freq: 659.25, time: 0.45, dur: 0.32 }, // E5
+        { freq: 587.33, time: 0.80, dur: 0.16 }, // D5
+        { freq: 659.25, time: 0.98, dur: 0.16 }, // E5
+        { freq: 783.99, time: 1.16, dur: 0.55 }, // G5
+        { freq: 1046.50, time: 1.16, dur: 0.60 } // C6 和弦
+      ];
+      fanfare.forEach(note => {
+        playTone({ freq: note.freq, type: 'triangle', startTime: note.time, duration: note.dur, volume: 0.52 });
+        playTone({ freq: note.freq * 0.5, type: 'sine', startTime: note.time, duration: note.dur, volume: 0.28 });
+      });
+    }
+
+    // 首頁「🎵 點擊測試音效」按鈕功能
+    function testAudioSystem() {
+      if (!soundEnabled) {
+        toggleSound();
+      }
+      ensureAudioContext();
+      playCorrect(2, true, 0);
+
+      const btnText = document.getElementById('text-test-sound');
+      if (btnText) {
+        btnText.textContent = '✨ 音效正常運作中！';
+        setTimeout(() => {
+          btnText.textContent = '🎵 點擊測試音效';
+        }, 1500);
       }
     }
 
@@ -823,13 +937,14 @@
       const iconGame = document.getElementById('icon-sound-game');
 
       if (soundEnabled) {
+        ensureAudioContext();
         iconHome.className = 'fa-solid fa-volume-high';
-        textHome.textContent = '音效：開啟';
+        textHome.textContent = '🔊 音效開啟';
         iconGame.className = 'fa-solid fa-volume-high text-sm';
-        playSound('lock');
+        playClick();
       } else {
         iconHome.className = 'fa-solid fa-volume-xmark';
-        textHome.textContent = '音效：關閉';
+        textHome.textContent = '🔇 靜音';
         iconGame.className = 'fa-solid fa-volume-xmark text-sm text-rose-400';
       }
     }
@@ -920,7 +1035,7 @@
         badgeVersus.classList.remove('hidden');
         badgeSingle.classList.add('hidden');
       }
-      playSound('lock');
+      playClick();
     }
 
     function selectDuration(seconds) {
@@ -939,7 +1054,7 @@
           subDiv.className = 'text-xs font-bold text-slate-500 mt-1';
         }
       });
-      playSound('lock');
+      playClick();
     }
 
     function renderQuestionBankModal() {
@@ -963,6 +1078,7 @@
     }
 
     function toggleBankModal(show) {
+      playClick();
       const modal = document.getElementById('modal-bank');
       if (show) {
         renderQuestionBankModal();
@@ -1061,6 +1177,7 @@
     function startGame() {
       stopAllTimers();
       stopConfetti();
+      playStart();
 
       // 隱藏彈窗與首頁，切換至遊戲畫面
       document.getElementById('modal-result').classList.add('hidden');
@@ -1162,6 +1279,9 @@
 
     function nextQuestion() {
       if (!gameState.isRunning) return;
+      if (gameState.questionIndex > 0) {
+        playClick();
+      }
 
       if (gameState.questionRafId) {
         cancelAnimationFrame(gameState.questionRafId);
@@ -1223,7 +1343,7 @@
         const ceilSec = Math.ceil(remainingSec);
         if (ceilSec < gameState.lastTickSec && ceilSec > 0) {
           gameState.lastTickSec = ceilSec;
-          playSound('tick');
+          playTick(ceilSec === 1);
         }
 
         if (remainingSec <= 1.0) {
@@ -1303,7 +1423,7 @@
         deltaScore = s.correctStreak;
         s.score += deltaScore;
 
-        playSound('correct', s.correctStreak);
+        playCorrect(s.correctStreak, false, 0);
 
         const chosenBtn = document.getElementById(`single-opt-${choiceIndex}`);
         chosenBtn.classList.add('animate-pop-success', 'ring-4', 'ring-emerald-400');
@@ -1316,7 +1436,7 @@
         deltaScore = -s.wrongStreak;
         s.score += deltaScore;
 
-        playSound('wrong');
+        playWrong(0);
 
         if (!isTimeout) {
           const chosenBtn = document.getElementById(`single-opt-${choiceIndex}`);
@@ -1426,7 +1546,7 @@
       teamData.choiceIndex = choiceIndex;
       teamData.timeMs = elapsedMs;
 
-      playSound('lock');
+      playLock(team);
 
       // 鎖定該隊的兩個選項按鈕並標示已選項目
       const btn0 = document.getElementById(`${team}-opt-0`);
@@ -1489,13 +1609,10 @@
       const redDelta = evaluateTeamScore('red', redCorrect, redFastestBonus);
       const whiteDelta = evaluateTeamScore('white', whiteCorrect, whiteFastestBonus);
 
-      // 播放音效（只要有一隊答對就播放答對音效，否則播放錯誤音效）
-      if (redCorrect || whiteCorrect) {
-        const bestStreak = Math.max(red.correctStreak, white.correctStreak, 1);
-        playSound('correct', bestStreak);
-      } else {
-        playSound('wrong');
-      }
+      // 播放雙人對戰專屬開獎音效（全對、全錯、或一對一錯雙重回饋 + 搶答成功閃亮音效）
+      const bestStreak = Math.max(red.correctStreak, white.correctStreak, 1);
+      const hasAnyFastest = redFastestBonus || whiteFastestBonus;
+      playVersusReveal(redCorrect, whiteCorrect, bestStreak, hasAnyFastest);
 
       // 渲染雙方欄位回饋卡
       renderTeamFeedback('red', redCorrect, !red.answered, redDelta, redFastestBonus);
@@ -1588,7 +1705,7 @@
         detailEl.innerHTML = `
           <span>耗時 ${timeStr}s</span>
           <span>•</span>
-          <span>本題 +${t.correctStreak}${hasFastestBonus ? ' (含最快+3)' : ''}</span>
+          <span>本題 +${t.correctStreak}${hasFastestBonus ? ' (含搶答成功+3)' : ''}</span>
           <span>•</span>
           <span class="font-black text-emerald-900">累積：${t.score} 分</span>
         `;
@@ -1658,7 +1775,7 @@
 
     function endGame() {
       stopAllTimers();
-      playSound('fanfare');
+      playVictory();
 
       const modal = document.getElementById('modal-result');
       const headline = document.getElementById('result-headline');
@@ -1737,6 +1854,7 @@
     }
 
     function returnToHome() {
+      playClick();
       stopAllTimers();
       stopConfetti();
       document.getElementById('modal-result').classList.add('hidden');

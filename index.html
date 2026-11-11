@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>丹青極速決</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -24,6 +24,15 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overscroll-behavior: none;
     }
 
     body {
@@ -36,10 +45,60 @@
       color: #1e293b;
       overflow-x: hidden;
       touch-action: manipulation;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
     }
 
     .font-serif-tc {
       font-family: var(--font-serif);
+    }
+
+    /* 動態視窗高度容器 (解決手機瀏覽器網址列遮擋問題) */
+    .game-viewport {
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* 彈性字級：自動依手機、平板、觸控大屏縮放 */
+    .fluid-question-title {
+      font-size: clamp(1.85rem, 5.5vw, 4.25rem);
+      line-height: 1.15;
+    }
+
+    .fluid-single-opt {
+      font-size: clamp(1.75rem, 4.8vw, 3.75rem);
+      line-height: 1.15;
+    }
+
+    .fluid-versus-opt {
+      font-size: clamp(1.35rem, 3.8vw, 2.75rem);
+      line-height: 1.15;
+    }
+
+    /* 手機橫向或低高度螢幕緊湊最佳化 */
+    @media (max-height: 600px) {
+      .compact-py {
+        padding-top: 0.25rem !important;
+        padding-bottom: 0.25rem !important;
+      }
+      .compact-my {
+        margin-top: 0.15rem !important;
+        margin-bottom: 0.15rem !important;
+      }
+      .fluid-question-title {
+        font-size: clamp(1.45rem, 4.2vw, 2.4rem);
+      }
+      .fluid-single-opt {
+        font-size: clamp(1.4rem, 3.6vw, 2.2rem);
+      }
+      .fluid-versus-opt {
+        font-size: clamp(1.15rem, 3vw, 1.85rem);
+      }
     }
 
     /* 宣紙紋理裝飾框 */
@@ -53,17 +112,20 @@
     /* 遊戲色卡按鈕立體與觸控特效 */
     .color-option-card {
       position: relative;
-      transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s ease, filter 0.15s ease;
+      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease, filter 0.12s ease;
       cursor: pointer;
       overflow: hidden;
+      touch-action: manipulation;
     }
 
     .color-option-card:active:not(:disabled) {
       transform: scale(0.96);
     }
 
-    .color-option-card:hover:not(:disabled) {
-      transform: translateY(-3px);
+    @media (hover: hover) {
+      .color-option-card:hover:not(:disabled) {
+        transform: translateY(-3px);
+      }
     }
 
     /* 答對彈跳發光動畫 */
@@ -162,8 +224,8 @@
   <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50 hidden"></canvas>
 
   <!-- ==================== 1. 首頁設定畫面 (HOME VIEW) ==================== -->
-  <main id="view-home" class="flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-6xl mx-auto w-full">
-    <div class="paper-card rounded-3xl p-5 sm:p-8 w-full border-2 border-slate-800/15 relative overflow-hidden">
+  <main id="view-home" class="flex-1 flex flex-col items-center justify-start sm:justify-center p-2.5 sm:p-5 md:p-6 max-w-6xl mx-auto w-full overflow-y-auto">
+    <div class="paper-card rounded-2xl sm:rounded-3xl p-4 sm:p-7 md:p-8 w-full border-2 border-slate-800/15 relative overflow-hidden my-auto">
       <!-- 頂部傳統色帶裝飾 -->
       <div class="absolute top-0 left-0 right-0 h-2.5 flex">
         <div class="flex-1" style="background-color: #80A492;"></div>
@@ -177,43 +239,47 @@
       </div>
 
       <!-- 頂部標籤與題庫預覽按鈕列 -->
-      <div class="flex flex-wrap items-center justify-between gap-2 mt-2 mb-3">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100/90 border border-amber-300 text-amber-900 text-xs sm:text-sm font-bold">
+      <div class="flex flex-wrap items-center justify-between gap-2 mt-1.5 mb-2.5">
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100/90 border border-amber-300 text-amber-900 text-[11px] sm:text-sm font-bold">
           <i class="fa-solid fa-palette"></i>
           <span>國語文色彩詞彙極速辨識互動遊戲</span>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <button id="btn-open-bank" type="button" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition flex items-center gap-1.5 border border-slate-300">
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <button id="btn-open-bank" type="button" class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold text-xs sm:text-sm transition flex items-center gap-1.5 border border-slate-300">
             <i class="fa-solid fa-book-open"></i>
-            <span>題庫與規則一覽 (18題)</span>
+            <span>題庫 (18題)</span>
           </button>
-          <button id="btn-toggle-voice-home" type="button" onclick="toggleVoice()" class="px-3.5 py-1.5 rounded-xl bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-bold text-xs sm:text-sm transition flex items-center gap-1.5 border border-indigo-300">
+          <button id="btn-toggle-voice-home" type="button" onclick="toggleVoice()" class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-indigo-100 hover:bg-indigo-200 active:scale-95 text-indigo-900 font-bold text-xs sm:text-sm transition flex items-center gap-1.5 border border-indigo-300">
             <i class="fa-solid fa-comment-dots"></i>
-            <span id="text-voice-home">🗣️ 語音播報：開</span>
+            <span id="text-voice-home">🗣️ 語音：開</span>
           </button>
-          <button id="btn-toggle-sound-home" type="button" onclick="toggleSound()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm transition flex items-center gap-1.5">
+          <button id="btn-toggle-sound-home" type="button" onclick="toggleSound()" class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white font-bold text-xs sm:text-sm transition flex items-center gap-1.5">
             <i id="icon-sound-home" class="fa-solid fa-volume-high"></i>
-            <span id="text-sound-home">🔊 音效：開啟</span>
+            <span id="text-sound-home">🔊 音效：開</span>
+          </button>
+          <button id="btn-fullscreen-home" type="button" onclick="toggleFullscreen()" class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-black text-xs sm:text-sm transition flex items-center gap-1.5 shadow-sm">
+            <i id="icon-fullscreen-home" class="fa-solid fa-expand"></i>
+            <span class="hidden xs:inline">全螢幕</span>
           </button>
         </div>
       </div>
 
       <!-- 固定遊戲標題 -->
-      <div class="text-center my-2 sm:my-4">
-        <h1 class="font-serif-tc text-4xl sm:text-6xl font-black tracking-wider text-slate-900 drop-shadow-sm">
+      <div class="text-center my-1.5 sm:my-3">
+        <h1 class="font-serif-tc text-3xl sm:text-5xl md:text-6xl font-black tracking-wider text-slate-900 drop-shadow-sm">
           丹青極速決
         </h1>
-        <p class="text-slate-600 text-sm sm:text-base mt-1.5 font-medium">
-          縹碧丹朱黛皂白・三秒瞬間辨真色
+        <p class="text-slate-600 text-xs sm:text-base mt-1 font-medium">
+          縹碧丹朱黛皂白・三秒瞬間辨真色（支援觸屏・平板・手機同屏對戰）
         </p>
       </div>
 
       <!-- 視覺化「🔊 音效測試與狀態檢測面板」 -->
-      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-3.5 sm:p-4 mb-5 border-2 border-amber-400/60 shadow-md">
-        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-3 sm:p-4 mb-3 sm:mb-5 border-2 border-amber-400/60 shadow-md">
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2.5 sm:gap-3">
           <!-- 左側：引擎狀態燈號與音浪動畫 -->
-          <div class="flex items-center gap-3">
-            <div id="sound-eq-visualizer" class="flex items-end gap-1 px-2.5 py-2 rounded-xl bg-slate-950/90 border border-slate-700 h-10">
+          <div class="flex items-center gap-2.5 sm:gap-3">
+            <div id="sound-eq-visualizer" class="flex items-end gap-1 px-2 py-1.5 rounded-xl bg-slate-950/90 border border-slate-700 h-9 sm:h-10 shrink-0">
               <span class="eq-bar bg-emerald-400"></span>
               <span class="eq-bar bg-amber-400"></span>
               <span class="eq-bar bg-rose-400"></span>
@@ -221,84 +287,80 @@
               <span class="eq-bar bg-emerald-400"></span>
             </div>
             <div>
-              <div class="flex items-center gap-2">
-                <span id="audio-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <div class="flex items-center gap-1.5">
+                <span id="audio-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
                 <span id="audio-status-text" class="font-black text-xs sm:text-sm text-emerald-300">
                   🟢 音效引擎就緒（WAV實體音檔 + WebAudio 雙引擎）
                 </span>
               </div>
               <div id="audio-last-triggered" class="text-[11px] sm:text-xs text-slate-300 mt-0.5">
-                請點擊右側按鈕測試喇叭音量（支援電腦、平板、手機與大屏）
+                請點擊按鈕測試喇叭音量（支援大屏、平板與手機多點觸控）
               </div>
             </div>
           </div>
 
           <!-- 右側：測試按鈕與音量拉桿 -->
-          <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-between lg:justify-end">
-            <div class="flex items-center gap-2">
-              <button type="button" onclick="testSoundEffect('correct')" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm shadow active:scale-95 transition flex items-center gap-1.5">
+          <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-between lg:justify-end">
+            <div class="flex items-center gap-1.5 sm:gap-2">
+              <button type="button" onclick="testSoundEffect('correct')" class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm shadow active:scale-95 transition flex items-center gap-1.5">
                 <i class="fa-solid fa-volume-high"></i>
-                <span>🔊 測試答對音效</span>
+                <span>測試答對</span>
               </button>
-              <button type="button" onclick="testSoundEffect('wrong')" class="px-3.5 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs sm:text-sm shadow active:scale-95 transition flex items-center gap-1.5">
+              <button type="button" onclick="testSoundEffect('wrong')" class="px-3 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs sm:text-sm shadow active:scale-95 transition flex items-center gap-1.5">
                 <i class="fa-solid fa-bell"></i>
-                <span>🔔 測試答錯音效</span>
+                <span>測試答錯</span>
               </button>
             </div>
 
             <!-- 音量拉桿 -->
-            <div class="flex items-center gap-2 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-700">
+            <div class="flex items-center gap-1.5 bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-700">
               <i class="fa-solid fa-sliders text-amber-400 text-xs"></i>
               <label for="volume-slider" class="text-xs font-bold text-slate-300">音量</label>
-              <input id="volume-slider" type="range" min="0" max="100" value="100" oninput="updateMasterVolume(this.value)" class="w-20 sm:w-24 accent-amber-400 cursor-pointer" />
-              <span id="volume-label" class="font-mono text-xs font-black text-amber-300 w-9 text-right">100%</span>
+              <input id="volume-slider" type="range" min="0" max="100" value="100" oninput="updateMasterVolume(this.value)" class="w-16 sm:w-24 accent-amber-400 cursor-pointer" />
+              <span id="volume-label" class="font-mono text-xs font-black text-amber-300 w-8 text-right">100%</span>
             </div>
           </div>
-        </div>
-        <div class="mt-2 pt-2 border-t border-slate-700/80 text-[11px] sm:text-xs text-amber-200/90 flex items-center gap-1.5">
-          <i class="fa-solid fa-circle-info text-amber-400 shrink-0"></i>
-          <span>若在 GitHub 測試，請確認已將最新程式碼貼上覆蓋 <code class="px-1 py-0.5 rounded bg-slate-950 text-amber-300">index.html</code> 並 Commit，等待約 1 分鐘後按 <kbd class="px-1.5 py-0.5 rounded bg-slate-700 text-white">Ctrl+F5</kbd> 強制重新整理。</span>
         </div>
       </div>
 
       <!-- 設定區塊：模式選擇 & 時間選擇 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 my-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5 my-3">
         <!-- 1. 選擇遊戲模式 -->
-        <div class="bg-white/90 rounded-2xl p-4 sm:p-5 border-2 border-slate-200 shadow-sm flex flex-col justify-between">
+        <div class="bg-white/90 rounded-2xl p-3.5 sm:p-5 border-2 border-slate-200 shadow-sm flex flex-col justify-between">
           <div>
-            <div class="flex items-center gap-2 text-slate-800 font-black text-base sm:text-lg mb-3">
-              <span class="w-7 h-7 rounded-lg bg-slate-800 text-white flex items-center justify-center text-sm">1</span>
+            <div class="flex items-center gap-2 text-slate-800 font-black text-sm sm:text-lg mb-2.5">
+              <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-800 text-white flex items-center justify-center text-xs sm:text-sm">1</span>
               <span>選擇遊戲模式</span>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
               <!-- 一人遊戲 -->
-              <button type="button" id="mode-btn-single" onclick="selectMode('single')" class="mode-card group relative rounded-2xl p-4 text-left border-2 border-indigo-600 bg-indigo-50/80 transition-all flex flex-col justify-between">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-lg shadow">
+              <button type="button" id="mode-btn-single" onclick="selectMode('single')" class="mode-card group relative rounded-2xl p-3 sm:p-4 text-left border-2 border-indigo-600 bg-indigo-50/80 transition-all flex flex-col justify-between active:scale-95">
+                <div class="flex items-center justify-between mb-1.5 sm:mb-2">
+                  <span class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base sm:text-lg shadow">
                     <i class="fa-solid fa-user-check"></i>
                   </span>
-                  <span id="badge-mode-single" class="px-2 py-0.5 text-xs font-black rounded-full bg-indigo-600 text-white">已選擇</span>
+                  <span id="badge-mode-single" class="px-2 py-0.5 text-[11px] sm:text-xs font-black rounded-full bg-indigo-600 text-white">已選擇</span>
                 </div>
                 <div>
-                  <h3 class="font-black text-lg text-slate-900">一人遊戲</h3>
-                  <p class="text-xs text-slate-600 mt-1 leading-relaxed">
-                    單人全版極速作答！連續答對累加得分（+1, +2, +3...），挑戰最高連勝紀錄。
+                  <h3 class="font-black text-base sm:text-lg text-slate-900">一人遊戲</h3>
+                  <p class="text-[11px] sm:text-xs text-slate-600 mt-1 leading-relaxed">
+                    單人極速作答！連對累加得分（+1, +2, +3...），挑戰最高連勝。
                   </p>
                 </div>
               </button>
 
               <!-- 兩人對戰模式 -->
-              <button type="button" id="mode-btn-versus" onclick="selectMode('versus')" class="mode-card group relative rounded-2xl p-4 text-left border-2 border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg shadow">
+              <button type="button" id="mode-btn-versus" onclick="selectMode('versus')" class="mode-card group relative rounded-2xl p-3 sm:p-4 text-left border-2 border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between active:scale-95">
+                <div class="flex items-center justify-between mb-1.5 sm:mb-2">
+                  <span class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-base sm:text-lg shadow">
                     <i class="fa-solid fa-user-group"></i>
                   </span>
-                  <span id="badge-mode-versus" class="hidden px-2 py-0.5 text-xs font-black rounded-full bg-rose-600 text-white">已選擇</span>
+                  <span id="badge-mode-versus" class="hidden px-2 py-0.5 text-[11px] sm:text-xs font-black rounded-full bg-rose-600 text-white">已選擇</span>
                 </div>
                 <div>
-                  <h3 class="font-black text-lg text-slate-900">兩人對戰模式</h3>
-                  <p class="text-xs text-slate-600 mt-1 leading-relaxed">
-                    紅隊 vs 白隊左右同屏搶答！最快答對小隊額外 <strong class="text-rose-600">+3分</strong>，三秒同步開獎。
+                  <h3 class="font-black text-base sm:text-lg text-slate-900">兩人對戰模式</h3>
+                  <p class="text-[11px] sm:text-xs text-slate-600 mt-1 leading-relaxed">
+                    紅白同屏多點搶答！最快答對額外 <strong class="text-rose-600">+3分</strong>，三秒開獎。
                   </p>
                 </div>
               </button>
@@ -307,45 +369,45 @@
         </div>
 
         <!-- 2. 選擇遊戲時間 -->
-        <div class="bg-white/90 rounded-2xl p-4 sm:p-5 border-2 border-slate-200 shadow-sm flex flex-col justify-between">
+        <div class="bg-white/90 rounded-2xl p-3.5 sm:p-5 border-2 border-slate-200 shadow-sm flex flex-col justify-between">
           <div>
-            <div class="flex items-center gap-2 text-slate-800 font-black text-base sm:text-lg mb-3">
-              <span class="w-7 h-7 rounded-lg bg-slate-800 text-white flex items-center justify-center text-sm">2</span>
+            <div class="flex items-center gap-2 text-slate-800 font-black text-sm sm:text-lg mb-2.5">
+              <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-800 text-white flex items-center justify-center text-xs sm:text-sm">2</span>
               <span>選擇遊戲時間</span>
             </div>
-            <div class="grid grid-cols-3 gap-3">
-              <button type="button" id="time-btn-60" onclick="selectDuration(60)" class="time-card rounded-2xl p-3.5 text-center border-2 border-emerald-600 bg-emerald-50/80 transition-all">
-                <div class="text-2xl sm:text-3xl font-black text-emerald-800">1<span class="text-base ml-0.5">分鐘</span></div>
-                <div class="text-xs font-bold text-emerald-700 mt-1">60 秒快節奏</div>
+            <div class="grid grid-cols-3 gap-2 sm:gap-3">
+              <button type="button" id="time-btn-60" onclick="selectDuration(60)" class="time-card rounded-2xl p-2.5 sm:p-3.5 text-center border-2 border-emerald-600 bg-emerald-50/80 transition-all active:scale-95">
+                <div class="text-xl sm:text-3xl font-black text-emerald-800">1<span class="text-xs sm:text-base ml-0.5">分鐘</span></div>
+                <div class="text-[11px] sm:text-xs font-bold text-emerald-700 mt-0.5">60 秒快節奏</div>
               </button>
-              <button type="button" id="time-btn-180" onclick="selectDuration(180)" class="time-card rounded-2xl p-3.5 text-center border-2 border-slate-200 bg-white hover:border-slate-300 transition-all">
-                <div class="text-2xl sm:text-3xl font-black text-slate-800">3<span class="text-base ml-0.5">分鐘</span></div>
-                <div class="text-xs font-bold text-slate-500 mt-1">180 秒標準賽</div>
+              <button type="button" id="time-btn-180" onclick="selectDuration(180)" class="time-card rounded-2xl p-2.5 sm:p-3.5 text-center border-2 border-slate-200 bg-white hover:border-slate-300 transition-all active:scale-95">
+                <div class="text-xl sm:text-3xl font-black text-slate-800">3<span class="text-xs sm:text-base ml-0.5">分鐘</span></div>
+                <div class="text-[11px] sm:text-xs font-bold text-slate-500 mt-0.5">180 秒標準賽</div>
               </button>
-              <button type="button" id="time-btn-300" onclick="selectDuration(300)" class="time-card rounded-2xl p-3.5 text-center border-2 border-slate-200 bg-white hover:border-slate-300 transition-all">
-                <div class="text-2xl sm:text-3xl font-black text-slate-800">5<span class="text-base ml-0.5">分鐘</span></div>
-                <div class="text-xs font-bold text-slate-500 mt-1">300 秒耐力賽</div>
+              <button type="button" id="time-btn-300" onclick="selectDuration(300)" class="time-card rounded-2xl p-2.5 sm:p-3.5 text-center border-2 border-slate-200 bg-white hover:border-slate-300 transition-all active:scale-95">
+                <div class="text-xl sm:text-3xl font-black text-slate-800">5<span class="text-xs sm:text-base ml-0.5">分鐘</span></div>
+                <div class="text-[11px] sm:text-xs font-bold text-slate-500 mt-0.5">300 秒耐力賽</div>
               </button>
             </div>
           </div>
 
           <!-- 計分規則摘要 -->
-          <div class="mt-4 p-3 rounded-xl bg-amber-50/90 border border-amber-200/80 text-xs text-slate-700 space-y-1">
+          <div class="mt-3 p-2.5 sm:p-3 rounded-xl bg-amber-50/90 border border-amber-200/80 text-[11px] sm:text-xs text-slate-700 space-y-0.5">
             <div class="font-black text-amber-900 flex items-center gap-1.5">
               <i class="fa-solid fa-bolt text-amber-600"></i>
               <span>核心計分與作答規則：</span>
             </div>
             <p>• <strong>每題限時 3 秒</strong>：二選一色卡，錯誤選項自動從不同顏色分組挑選。</p>
-            <p>• <strong>連對累進加分</strong>：第1題答對 <span class="text-emerald-700 font-bold">+1</span>、連續第2題 <span class="text-emerald-700 font-bold">+2</span>、第3題 <span class="text-emerald-700 font-bold">+3</span>... 中斷則回歸 +1。</p>
-            <p>• <strong>連錯或超時累進扣分</strong>：第1次答錯/未答 <span class="text-rose-600 font-bold">-1</span>、連續第2次 <span class="text-rose-600 font-bold">-2</span>、第3次 <span class="text-rose-600 font-bold">-3</span>... 中斷則回歸 -1。</p>
-            <p>• <strong>兩人對戰搶答獎勵</strong>：每題最快回答正確的小隊，額外再加 <span class="text-rose-600 font-bold">+3 分</span>！</p>
+            <p>• <strong>連對累進加分</strong>：第1題 <span class="text-emerald-700 font-bold">+1</span>、連2題 <span class="text-emerald-700 font-bold">+2</span>、連3題 <span class="text-emerald-700 font-bold">+3</span>... 中斷則回歸 +1。</p>
+            <p>• <strong>連錯或超時扣分</strong>：第1次 <span class="text-rose-600 font-bold">-1</span>、連2次 <span class="text-rose-600 font-bold">-2</span>、連3次 <span class="text-rose-600 font-bold">-3</span>... 中斷回歸 -1。</p>
+            <p>• <strong>兩人對戰搶答獎勵</strong>：每題最快答對的小隊，額外再加 <span class="text-rose-600 font-bold">+3 分</span>！</p>
           </div>
         </div>
       </div>
 
       <!-- 開始遊戲大按鈕 -->
       <div class="text-center mt-2">
-        <button type="button" onclick="startGame()" class="w-full sm:w-auto min-w-[290px] px-10 py-4 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 hover:from-indigo-900 hover:to-slate-900 text-white font-black text-xl sm:text-2xl shadow-xl hover:shadow-2xl active:scale-95 transition-all inline-flex items-center justify-center gap-3 border-b-4 border-slate-950">
+        <button type="button" onclick="startGame()" class="w-full sm:w-auto min-w-[260px] px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 hover:from-indigo-900 hover:to-slate-900 text-white font-black text-lg sm:text-2xl shadow-xl active:scale-95 transition-all inline-flex items-center justify-center gap-3 border-b-4 border-slate-950">
           <i class="fa-solid fa-play text-amber-400"></i>
           <span>開始挑戰</span>
         </button>
@@ -354,162 +416,168 @@
   </main>
 
   <!-- ==================== 2. 遊戲主畫面 (GAMEPLAY VIEW) ==================== -->
-  <section id="view-game" class="hidden fixed inset-0 flex flex-col justify-between bg-[#f7f4eb] z-20 overflow-hidden">
+  <section id="view-game" class="hidden fixed inset-0 game-viewport flex flex-col justify-between bg-[#f7f4eb] z-20 overflow-hidden">
     
     <!-- 2A. 最上方導覽列：遊戲總時間倒數 & 分數列 -->
-    <header class="w-full bg-slate-900 text-white px-3 sm:px-6 py-2.5 shadow-md z-30">
-      <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
+    <header class="w-full bg-slate-900 text-white px-2.5 sm:px-6 py-1.5 sm:py-2.5 shadow-md z-30 shrink-0 compact-py">
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-1.5 sm:gap-2">
         <!-- 左側：返回與遊戲標題 -->
-        <div class="flex items-center gap-2 sm:gap-3">
-          <button type="button" onclick="returnToHome()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-slate-700 transition">
+        <div class="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+          <button type="button" onclick="returnToHome()" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-slate-700 transition shrink-0">
             <i class="fa-solid fa-house"></i>
-            <span class="hidden sm:inline">返回首頁</span>
+            <span class="hidden md:inline">首頁</span>
           </button>
-          <span class="font-serif-tc font-black text-base sm:text-xl text-amber-300 tracking-wide truncate">
+          <span class="font-serif-tc font-black text-sm sm:text-xl text-amber-300 tracking-wide truncate hidden xs:inline">
             丹青極速決
           </span>
-          <span id="header-question-count" class="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700">
+          <span id="header-question-count" class="px-2 sm:px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] sm:text-xs font-bold border border-slate-700 shrink-0">
             第 1 題
           </span>
         </div>
 
         <!-- 中央：遊戲總時間倒數 -->
-        <div class="flex items-center gap-2 sm:gap-3 bg-slate-800/90 px-3.5 sm:px-5 py-1.5 rounded-2xl border border-slate-700">
-          <i class="fa-regular fa-clock text-amber-400 text-base sm:text-lg"></i>
-          <div class="text-xs text-slate-400 font-bold hidden md:block">遊戲剩餘時間</div>
-          <div id="global-timer-text" class="font-mono font-black text-xl sm:text-2xl tracking-wider text-white">
+        <div class="flex items-center gap-1.5 sm:gap-2.5 bg-slate-800/90 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-2xl border border-slate-700 shrink-0">
+          <i class="fa-regular fa-clock text-amber-400 text-sm sm:text-lg"></i>
+          <div class="text-xs text-slate-400 font-bold hidden lg:block">剩餘時間</div>
+          <div id="global-timer-text" class="font-mono font-black text-base sm:text-2xl tracking-wider text-white">
             01:00
           </div>
         </div>
 
-        <!-- 右側：即時比分概覽與音效/語音開關 -->
-        <div class="flex items-center gap-2 sm:gap-2.5">
+        <!-- 右側：即時比分概覽與音效/語音/全螢幕開關 -->
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <!-- 單人模式頂部分數 -->
-          <div id="header-score-single" class="flex items-center gap-2 bg-indigo-950/90 border border-indigo-700/70 px-3.5 py-1 rounded-xl">
-            <span class="text-xs text-indigo-200 font-bold">累積得分</span>
-            <span id="single-top-score" class="font-mono font-black text-lg sm:text-xl text-amber-300">0</span>
+          <div id="header-score-single" class="flex items-center gap-1.5 bg-indigo-950/90 border border-indigo-700/70 px-2.5 sm:px-3.5 py-1 rounded-xl">
+            <span class="text-[11px] sm:text-xs text-indigo-200 font-bold hidden sm:inline">累積得分</span>
+            <span id="single-top-score" class="font-mono font-black text-base sm:text-xl text-amber-300">0</span>
           </div>
 
           <!-- 雙人模式頂部紅白比分 -->
-          <div id="header-score-versus" class="hidden items-center gap-2 text-xs sm:text-sm font-black">
-            <div class="px-2.5 py-1 rounded-lg bg-rose-700 text-white flex items-center gap-1.5">
-              <span>紅隊</span>
-              <span id="versus-top-red" class="font-mono text-base sm:text-lg text-amber-200">0</span>
+          <div id="header-score-versus" class="hidden items-center gap-1 sm:gap-2 text-xs sm:text-sm font-black">
+            <div class="px-2 py-0.5 sm:py-1 rounded-lg bg-rose-700 text-white flex items-center gap-1">
+              <span class="hidden sm:inline">紅隊</span>
+              <span class="sm:hidden">紅</span>
+              <span id="versus-top-red" class="font-mono text-sm sm:text-lg text-amber-200">0</span>
             </div>
-            <span class="text-slate-400">VS</span>
-            <div class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-900 flex items-center gap-1.5">
-              <span>白隊</span>
-              <span id="versus-top-white" class="font-mono text-base sm:text-lg text-indigo-700">0</span>
+            <span class="text-slate-400 text-[10px] sm:text-xs">VS</span>
+            <div class="px-2 py-0.5 sm:py-1 rounded-lg bg-slate-100 text-slate-900 flex items-center gap-1">
+              <span class="hidden sm:inline">白隊</span>
+              <span class="sm:hidden">白</span>
+              <span id="versus-top-white" class="font-mono text-sm sm:text-lg text-indigo-700">0</span>
             </div>
           </div>
 
-          <button type="button" onclick="toggleVoice()" class="px-2.5 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-indigo-300 flex items-center justify-center border border-slate-700 transition" title="切換語音播報">
+          <button type="button" onclick="toggleVoice()" class="px-2 h-8 sm:h-9 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-[11px] sm:text-xs font-bold text-indigo-300 flex items-center justify-center border border-slate-700 transition" title="切換語音播報">
             <span id="icon-voice-game">🗣️開</span>
           </button>
 
-          <button type="button" onclick="toggleSound()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center border border-slate-700 transition" title="切換音效">
-            <i id="icon-sound-game" class="fa-solid fa-volume-high text-sm"></i>
+          <button type="button" onclick="toggleSound()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white flex items-center justify-center border border-slate-700 transition" title="切換音效">
+            <i id="icon-sound-game" class="fa-solid fa-volume-high text-xs sm:text-sm"></i>
+          </button>
+
+          <button type="button" onclick="toggleFullscreen()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-amber-300 flex items-center justify-center border border-slate-700 transition" title="切換全螢幕">
+            <i id="icon-fullscreen-game" class="fa-solid fa-expand text-xs sm:text-sm"></i>
           </button>
         </div>
       </div>
 
       <!-- 總時間進度條 -->
-      <div class="w-full h-1.5 bg-slate-800 mt-2 rounded-full overflow-hidden">
+      <div class="w-full h-1 sm:h-1.5 bg-slate-800 mt-1.5 rounded-full overflow-hidden">
         <div id="global-timer-bar" class="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 transition-all duration-300" style="width: 100%;"></div>
       </div>
     </header>
 
     <!-- 2B. 上方共用題目與 3 秒作答倒數動畫區 -->
-    <div class="w-full px-3 sm:px-6 pt-2 sm:pt-4 z-20">
-      <div class="max-w-7xl mx-auto paper-card rounded-2xl sm:rounded-3xl p-3 sm:p-5 relative overflow-hidden">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-6">
+    <div class="w-full px-2.5 sm:px-6 pt-1.5 sm:pt-3 z-20 shrink-0 compact-py">
+      <div class="max-w-7xl mx-auto paper-card rounded-2xl sm:rounded-3xl p-2.5 sm:p-4 md:p-5 relative overflow-hidden compact-py">
+        <div class="flex flex-row items-center justify-between gap-2">
           <!-- 左側提示標籤 -->
-          <div class="flex items-center gap-2">
-            <span class="px-3 py-1 rounded-xl bg-slate-900 text-amber-300 font-black text-xs sm:text-sm tracking-wide">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl bg-slate-900 text-amber-300 font-black text-[11px] sm:text-sm tracking-wide truncate">
               請問引號中字詞代表的顏色是？
             </span>
           </div>
 
           <!-- 3秒倒數顯示器 -->
-          <div class="flex items-center gap-2.5 bg-slate-100 px-3.5 py-1.5 rounded-2xl border border-slate-300">
-            <span class="text-xs font-black text-slate-600">作答倒數</span>
-            <div id="question-timer-badge" class="flex items-center gap-1 font-mono font-black text-lg sm:text-2xl text-emerald-600">
-              <i class="fa-solid fa-stopwatch text-base"></i>
+          <div class="flex items-center gap-1.5 sm:gap-2.5 bg-slate-100 px-2.5 sm:px-3.5 py-1 rounded-2xl border border-slate-300 shrink-0">
+            <span class="text-[11px] sm:text-xs font-black text-slate-600 hidden xs:inline">作答倒數</span>
+            <div id="question-timer-badge" class="flex items-center gap-1 font-mono font-black text-base sm:text-2xl text-emerald-600">
+              <i class="fa-solid fa-stopwatch text-xs sm:text-base"></i>
               <span id="question-timer-text">3.0</span>
-              <span class="text-xs font-bold">秒</span>
+              <span class="text-[11px] sm:text-xs font-bold">秒</span>
             </div>
           </div>
         </div>
 
         <!-- 題目大字區 -->
-        <div class="text-center my-2 sm:my-3">
-          <div id="question-prompt-display" class="font-serif-tc text-4xl sm:text-6xl md:text-7xl font-black text-slate-900 tracking-wider select-none py-1">
+        <div class="text-center my-1 sm:my-2.5 compact-my">
+          <div id="question-prompt-display" class="font-serif-tc fluid-question-title font-black text-slate-900 tracking-wider select-none py-0.5">
             「縹」碧
           </div>
         </div>
 
         <!-- 3秒動態縮減進度條 -->
-        <div class="w-full h-3 sm:h-3.5 bg-slate-200 rounded-full overflow-hidden p-0.5 border border-slate-300">
+        <div class="w-full h-2.5 sm:h-3.5 bg-slate-200 rounded-full overflow-hidden p-0.5 border border-slate-300">
           <div id="question-timer-bar" class="h-full rounded-full bg-emerald-500 transition-none" style="width: 100%;"></div>
         </div>
       </div>
     </div>
 
-    <!-- 2C. 下方作答區 (依模式切換：一人遊戲 或 兩人對戰模式) -->
-    <div class="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-4 flex flex-col justify-center overflow-hidden relative">
+    <!-- 2C. 下方作答區 (依模式切換：一人遊戲 或 兩人對戰模式，彈性撐滿剩餘高度不溢出) -->
+    <div class="flex-1 min-h-0 w-full max-w-7xl mx-auto px-2.5 sm:px-6 py-1.5 sm:py-3 flex flex-col justify-center overflow-hidden relative">
 
       <!-- ==================== 【一人遊戲】作答與回饋區 ==================== -->
-      <div id="arena-single" class="w-full h-full flex flex-col justify-between gap-3">
+      <div id="arena-single" class="w-full h-full min-h-0 flex flex-col justify-between gap-2 sm:gap-3">
         <!-- 單人狀態列 (連對/連錯狀態與累積分數) -->
-        <div class="flex items-center justify-between bg-white/85 px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
-          <div class="flex items-center gap-2">
-            <span class="text-xs sm:text-sm font-bold text-slate-500">目前狀態：</span>
-            <span id="single-streak-badge" class="px-3 py-0.5 rounded-full text-xs sm:text-sm font-black bg-slate-100 text-slate-700">
+        <div class="flex items-center justify-between bg-white/90 px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl border border-slate-200 shadow-sm shrink-0">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="text-xs sm:text-sm font-bold text-slate-500 shrink-0 hidden xs:inline">目前狀態：</span>
+            <span id="single-streak-badge" class="px-2.5 sm:px-3 py-0.5 rounded-full text-xs sm:text-sm font-black bg-slate-100 text-slate-700 truncate">
               準備作答
             </span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1.5 shrink-0">
             <span class="text-xs sm:text-sm font-bold text-slate-500">累積總分：</span>
-            <span id="single-score-big" class="font-mono font-black text-xl sm:text-2xl text-indigo-700">0</span>
+            <span id="single-score-big" class="font-mono font-black text-lg sm:text-2xl text-indigo-700">0</span>
             <span class="text-xs text-slate-500 font-bold">分</span>
           </div>
         </div>
 
-        <!-- 二選一大型觸控色卡區 -->
-        <div class="flex-1 grid grid-cols-2 gap-3 sm:gap-6 min-h-[160px] sm:min-h-[220px]">
-          <button type="button" id="single-opt-0" onpointerdown="handleSingleAnswer(0)" class="color-option-card rounded-3xl flex flex-col items-center justify-center p-4 sm:p-8 shadow-lg border-4">
-            <span class="opt-label text-3xl sm:text-5xl md:text-6xl font-black tracking-widest">淡青色</span>
+        <!-- 二選一大型觸控色卡區 (手機直向為上下2張寬大色卡，橫向/平板/大屏為左右2張巨型色卡) -->
+        <div class="flex-1 min-h-0 grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-5">
+          <button type="button" id="single-opt-0" onpointerdown="handleSingleAnswer(0, event)" class="color-option-card rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center p-3 sm:p-8 shadow-lg border-4 min-h-0">
+            <span class="opt-label fluid-single-opt font-black tracking-widest">淡青色</span>
           </button>
 
-          <button type="button" id="single-opt-1" onpointerdown="handleSingleAnswer(1)" class="color-option-card rounded-3xl flex flex-col items-center justify-center p-4 sm:p-8 shadow-lg border-4">
-            <span class="opt-label text-3xl sm:text-5xl md:text-6xl font-black tracking-widest">紅色</span>
+          <button type="button" id="single-opt-1" onpointerdown="handleSingleAnswer(1, event)" class="color-option-card rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center p-3 sm:p-8 shadow-lg border-4 min-h-0">
+            <span class="opt-label fluid-single-opt font-black tracking-widest">紅色</span>
           </button>
         </div>
 
         <!-- 單人作答回饋與「下一題」同步顯示區 -->
-        <div id="single-feedback-box" class="hidden rounded-3xl p-4 sm:p-5 border-2 shadow-xl transition-all">
-          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div id="single-feedback-box" class="hidden rounded-2xl sm:rounded-3xl p-3 sm:p-4 md:p-5 border-2 shadow-xl transition-all shrink-0">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4">
             <!-- 左側：答對/答錯圖示與正確選項說明 -->
-            <div class="flex items-center gap-3.5 text-left w-full sm:w-auto">
-              <div id="single-fb-icon" class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shrink-0 font-black">
+            <div class="flex items-center gap-2.5 sm:gap-3.5 text-left w-full sm:w-auto min-w-0">
+              <div id="single-fb-icon" class="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-3xl shrink-0 font-black">
                 ✓
               </div>
-              <div class="space-y-1">
-                <div class="flex flex-wrap items-center gap-2">
-                  <h4 id="single-fb-title" class="text-lg sm:text-2xl font-black">回答正確！</h4>
-                  <span id="single-fb-delta" class="px-3 py-0.5 rounded-full text-sm sm:text-base font-black bg-emerald-600 text-white">+1 分</span>
-                  <span id="single-fb-total" class="text-xs sm:text-sm font-black text-slate-700 bg-white/90 px-2.5 py-0.5 rounded-lg border border-slate-300">累積得分：1 分</span>
+              <div class="space-y-0.5 sm:space-y-1 min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <h4 id="single-fb-title" class="text-base sm:text-2xl font-black">回答正確！</h4>
+                  <span id="single-fb-delta" class="px-2.5 py-0.5 rounded-full text-xs sm:text-base font-black bg-emerald-600 text-white">+1 分</span>
+                  <span id="single-fb-total" class="text-xs sm:text-sm font-black text-slate-700 bg-white/90 px-2 py-0.5 rounded-lg border border-slate-300">累積得分：1 分</span>
                 </div>
-                <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-bold text-slate-700">
+                <div class="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-700">
                   <span>正確選項說明：</span>
-                  <span id="single-fb-swatch" class="inline-block w-5 h-5 rounded-md border border-slate-400 shadow-sm" style="background-color: #80A492;"></span>
+                  <span id="single-fb-swatch" class="inline-block w-4 h-4 sm:w-5 sm:h-5 rounded-md border border-slate-400 shadow-sm shrink-0" style="background-color: #80A492;"></span>
                   <span id="single-fb-correct-text" class="font-black text-slate-900">淡青色（「縹」碧）</span>
                 </div>
               </div>
             </div>
 
             <!-- 右側：同步出現的「下一題」按鈕 -->
-            <button type="button" id="btn-single-next" onclick="nextQuestion()" class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-slate-900 hover:bg-indigo-900 text-white font-black text-base sm:text-xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2 shrink-0">
+            <button type="button" id="btn-single-next" onpointerdown="triggerNextQuestion(event)" class="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-slate-900 hover:bg-indigo-900 text-white font-black text-base sm:text-xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2 shrink-0">
               <span>下一題</span>
               <i class="fa-solid fa-arrow-right"></i>
             </button>
@@ -517,110 +585,110 @@
         </div>
       </div>
 
-      <!-- ==================== 【兩人對戰模式】紅白雙欄作答區 ==================== -->
-      <div id="arena-versus" class="hidden w-full h-full relative grid grid-cols-2 gap-3 sm:gap-6 items-stretch">
+      <!-- ==================== 【兩人對戰模式】紅白雙欄作答區 (支援雙人多點同時觸控) ==================== -->
+      <div id="arena-versus" class="hidden w-full h-full min-h-0 relative grid grid-cols-2 gap-2 sm:gap-5 items-stretch">
         
         <!-- 左欄：紅隊 (RED TEAM) -->
-        <div id="red-team-column" class="bg-rose-50/90 border-2 sm:border-4 border-rose-400 rounded-3xl p-2.5 sm:p-4 flex flex-col justify-between relative shadow-md overflow-hidden">
+        <div id="red-team-column" class="bg-rose-50/90 border-2 sm:border-4 border-rose-400 rounded-2xl sm:rounded-3xl p-2 sm:p-4 flex flex-col justify-between relative shadow-md overflow-hidden min-h-0">
           <!-- 紅隊標頭與分數 -->
-          <div class="flex items-center justify-between bg-rose-600 text-white px-3 sm:px-4 py-2 rounded-2xl shadow-sm">
-            <div class="flex items-center gap-2">
-              <span class="w-7 h-7 rounded-lg bg-white text-rose-700 font-black flex items-center justify-center text-sm">紅</span>
-              <div>
-                <div class="font-black text-sm sm:text-lg leading-none">紅隊</div>
-                <div id="red-streak-text" class="text-[11px] text-rose-100 font-bold mt-0.5">準備搶答</div>
+          <div class="flex items-center justify-between bg-rose-600 text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-sm shrink-0">
+            <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-white text-rose-700 font-black flex items-center justify-center text-xs sm:text-sm shrink-0">紅</span>
+              <div class="min-w-0">
+                <div class="font-black text-xs sm:text-lg leading-none truncate">紅隊</div>
+                <div id="red-streak-text" class="text-[10px] sm:text-xs text-rose-100 font-bold mt-0.5 truncate">準備搶答</div>
               </div>
             </div>
-            <div class="text-right">
-              <div class="text-[10px] sm:text-xs text-rose-100 font-bold">累積得分</div>
-              <div id="red-score-display" class="font-mono font-black text-xl sm:text-3xl leading-none text-amber-200">0</div>
+            <div class="text-right shrink-0 ml-1">
+              <div class="text-[9px] sm:text-xs text-rose-100 font-bold hidden xs:block">累積得分</div>
+              <div id="red-score-display" class="font-mono font-black text-lg sm:text-3xl leading-none text-amber-200">0</div>
             </div>
           </div>
 
           <!-- 紅隊二選一選項 -->
-          <div class="flex-1 grid grid-rows-2 gap-2.5 sm:gap-3.5 my-2.5">
-            <button type="button" id="red-opt-0" onpointerdown="handleVersusAnswer('red', 0)" class="color-option-card rounded-2xl flex items-center justify-center p-3 sm:p-5 shadow-md border-4">
-              <span class="opt-label text-2xl sm:text-4xl font-black tracking-wider">淡青色</span>
+          <div class="flex-1 min-h-0 grid grid-rows-2 gap-2 sm:gap-3.5 my-1.5 sm:my-2.5">
+            <button type="button" id="red-opt-0" onpointerdown="handleVersusAnswer('red', 0, event)" class="color-option-card rounded-xl sm:rounded-2xl flex items-center justify-center p-2 sm:p-5 shadow-md border-2 sm:border-4 min-h-0">
+              <span class="opt-label fluid-versus-opt font-black tracking-wider">淡青色</span>
             </button>
-            <button type="button" id="red-opt-1" onpointerdown="handleVersusAnswer('red', 1)" class="color-option-card rounded-2xl flex items-center justify-center p-3 sm:p-5 shadow-md border-4">
-              <span class="opt-label text-2xl sm:text-4xl font-black tracking-wider">紅色</span>
+            <button type="button" id="red-opt-1" onpointerdown="handleVersusAnswer('red', 1, event)" class="color-option-card rounded-xl sm:rounded-2xl flex items-center justify-center p-2 sm:p-5 shadow-md border-2 sm:border-4 min-h-0">
+              <span class="opt-label fluid-versus-opt font-black tracking-wider">紅色</span>
             </button>
           </div>
 
           <!-- 紅隊作答鎖定提示遮罩 (未開獎前顯示) -->
-          <div id="red-lock-banner" class="hidden py-2 px-3 rounded-xl bg-rose-900/90 text-white text-center font-bold text-xs sm:text-sm">
+          <div id="red-lock-banner" class="hidden py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl bg-rose-900/90 text-white text-center font-bold text-[11px] sm:text-sm shrink-0">
             <i class="fa-solid fa-lock mr-1 text-amber-300"></i>
-            <span id="red-lock-text">已鎖定答案，等待開獎...</span>
+            <span id="red-lock-text">已鎖定，等待開獎...</span>
           </div>
 
           <!-- 紅隊開獎回饋卡 -->
-          <div id="red-feedback-card" class="hidden rounded-2xl p-2.5 sm:p-3.5 border-2 text-left transition-all">
-            <div class="flex items-center justify-between gap-1">
-              <div class="flex items-center gap-2">
-                <span id="red-fb-badge" class="w-7 h-7 rounded-lg flex items-center justify-center font-black text-sm text-white">✓</span>
-                <span id="red-fb-status" class="font-black text-sm sm:text-lg">答對了！</span>
+          <div id="red-feedback-card" class="hidden rounded-xl sm:rounded-2xl p-2 sm:p-3 border-2 text-left transition-all shrink-0">
+            <div class="flex flex-wrap items-center justify-between gap-1">
+              <div class="flex items-center gap-1 sm:gap-2">
+                <span id="red-fb-badge" class="w-5 h-5 sm:w-7 sm:h-7 rounded-md sm:rounded-lg flex items-center justify-center font-black text-xs sm:text-sm text-white shrink-0">✓</span>
+                <span id="red-fb-status" class="font-black text-xs sm:text-lg">答對了！</span>
               </div>
               <div class="flex items-center gap-1">
-                <span id="red-fb-speed" class="hidden px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] sm:text-xs">
-                  ⚡最快 +3
+                <span id="red-fb-speed" class="hidden px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] sm:text-xs">
+                  ⚡+3
                 </span>
-                <span id="red-fb-delta" class="px-2.5 py-0.5 rounded-full font-black text-xs sm:text-sm">+1 分</span>
+                <span id="red-fb-delta" class="px-2 py-0.5 rounded-full font-black text-[11px] sm:text-sm">+1 分</span>
               </div>
             </div>
-            <div id="red-fb-detail" class="mt-1.5 text-xs sm:text-sm font-bold text-slate-700 flex flex-wrap items-center gap-1.5">
+            <div id="red-fb-detail" class="mt-1 text-[11px] sm:text-sm font-bold text-slate-700 flex flex-wrap items-center gap-1 leading-tight">
               <!-- 正確答案說明與累積得分 -->
             </div>
           </div>
         </div>
 
         <!-- 右欄：白隊 (WHITE TEAM) -->
-        <div id="white-team-column" class="bg-white/95 border-2 sm:border-4 border-slate-400 rounded-3xl p-2.5 sm:p-4 flex flex-col justify-between relative shadow-md overflow-hidden">
+        <div id="white-team-column" class="bg-white/95 border-2 sm:border-4 border-slate-400 rounded-2xl sm:rounded-3xl p-2 sm:p-4 flex flex-col justify-between relative shadow-md overflow-hidden min-h-0">
           <!-- 白隊標頭與分數 -->
-          <div class="flex items-center justify-between bg-slate-800 text-white px-3 sm:px-4 py-2 rounded-2xl shadow-sm">
-            <div class="flex items-center gap-2">
-              <span class="w-7 h-7 rounded-lg bg-white text-slate-900 font-black flex items-center justify-center text-sm">白</span>
-              <div>
-                <div class="font-black text-sm sm:text-lg leading-none">白隊</div>
-                <div id="white-streak-text" class="text-[11px] text-slate-300 font-bold mt-0.5">準備搶答</div>
+          <div class="flex items-center justify-between bg-slate-800 text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-sm shrink-0">
+            <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-white text-slate-900 font-black flex items-center justify-center text-xs sm:text-sm shrink-0">白</span>
+              <div class="min-w-0">
+                <div class="font-black text-xs sm:text-lg leading-none truncate">白隊</div>
+                <div id="white-streak-text" class="text-[10px] sm:text-xs text-slate-300 font-bold mt-0.5 truncate">準備搶答</div>
               </div>
             </div>
-            <div class="text-right">
-              <div class="text-[10px] sm:text-xs text-slate-300 font-bold">累積得分</div>
-              <div id="white-score-display" class="font-mono font-black text-xl sm:text-3xl leading-none text-amber-300">0</div>
+            <div class="text-right shrink-0 ml-1">
+              <div class="text-[9px] sm:text-xs text-slate-300 font-bold hidden xs:block">累積得分</div>
+              <div id="white-score-display" class="font-mono font-black text-lg sm:text-3xl leading-none text-amber-300">0</div>
             </div>
           </div>
 
           <!-- 白隊二選一選項 (與紅隊完全一致) -->
-          <div class="flex-1 grid grid-rows-2 gap-2.5 sm:gap-3.5 my-2.5">
-            <button type="button" id="white-opt-0" onpointerdown="handleVersusAnswer('white', 0)" class="color-option-card rounded-2xl flex items-center justify-center p-3 sm:p-5 shadow-md border-4">
-              <span class="opt-label text-2xl sm:text-4xl font-black tracking-wider">淡青色</span>
+          <div class="flex-1 min-h-0 grid grid-rows-2 gap-2 sm:gap-3.5 my-1.5 sm:my-2.5">
+            <button type="button" id="white-opt-0" onpointerdown="handleVersusAnswer('white', 0, event)" class="color-option-card rounded-xl sm:rounded-2xl flex items-center justify-center p-2 sm:p-5 shadow-md border-2 sm:border-4 min-h-0">
+              <span class="opt-label fluid-versus-opt font-black tracking-wider">淡青色</span>
             </button>
-            <button type="button" id="white-opt-1" onpointerdown="handleVersusAnswer('white', 1)" class="color-option-card rounded-2xl flex items-center justify-center p-3 sm:p-5 shadow-md border-4">
-              <span class="opt-label text-2xl sm:text-4xl font-black tracking-wider">紅色</span>
+            <button type="button" id="white-opt-1" onpointerdown="handleVersusAnswer('white', 1, event)" class="color-option-card rounded-xl sm:rounded-2xl flex items-center justify-center p-2 sm:p-5 shadow-md border-2 sm:border-4 min-h-0">
+              <span class="opt-label fluid-versus-opt font-black tracking-wider">紅色</span>
             </button>
           </div>
 
           <!-- 白隊作答鎖定提示遮罩 -->
-          <div id="white-lock-banner" class="hidden py-2 px-3 rounded-xl bg-slate-800/90 text-white text-center font-bold text-xs sm:text-sm">
+          <div id="white-lock-banner" class="hidden py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl bg-slate-800/90 text-white text-center font-bold text-[11px] sm:text-sm shrink-0">
             <i class="fa-solid fa-lock mr-1 text-amber-300"></i>
-            <span id="white-lock-text">已鎖定答案，等待開獎...</span>
+            <span id="white-lock-text">已鎖定，等待開獎...</span>
           </div>
 
           <!-- 白隊開獎回饋卡 -->
-          <div id="white-feedback-card" class="hidden rounded-2xl p-2.5 sm:p-3.5 border-2 text-left transition-all">
-            <div class="flex items-center justify-between gap-1">
-              <div class="flex items-center gap-2">
-                <span id="white-fb-badge" class="w-7 h-7 rounded-lg flex items-center justify-center font-black text-sm text-white">✓</span>
-                <span id="white-fb-status" class="font-black text-sm sm:text-lg">答對了！</span>
+          <div id="white-feedback-card" class="hidden rounded-xl sm:rounded-2xl p-2 sm:p-3 border-2 text-left transition-all shrink-0">
+            <div class="flex flex-wrap items-center justify-between gap-1">
+              <div class="flex items-center gap-1 sm:gap-2">
+                <span id="white-fb-badge" class="w-5 h-5 sm:w-7 sm:h-7 rounded-md sm:rounded-lg flex items-center justify-center font-black text-xs sm:text-sm text-white shrink-0">✓</span>
+                <span id="white-fb-status" class="font-black text-xs sm:text-lg">答對了！</span>
               </div>
               <div class="flex items-center gap-1">
-                <span id="white-fb-speed" class="hidden px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] sm:text-xs">
-                  ⚡最快 +3
+                <span id="white-fb-speed" class="hidden px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] sm:text-xs">
+                  ⚡+3
                 </span>
-                <span id="white-fb-delta" class="px-2.5 py-0.5 rounded-full font-black text-xs sm:text-sm">+1 分</span>
+                <span id="white-fb-delta" class="px-2 py-0.5 rounded-full font-black text-[11px] sm:text-sm">+1 分</span>
               </div>
             </div>
-            <div id="white-fb-detail" class="mt-1.5 text-xs sm:text-sm font-bold text-slate-700 flex flex-wrap items-center gap-1.5">
+            <div id="white-fb-detail" class="mt-1 text-[11px] sm:text-sm font-bold text-slate-700 flex flex-wrap items-center gap-1 leading-tight">
               <!-- 正確答案說明與累積得分 -->
             </div>
           </div>
@@ -628,9 +696,9 @@
 
         <!-- 兩隊欄位正中間同步出現的「下一題」按鈕 -->
         <div id="versus-center-next-wrapper" class="hidden absolute inset-0 pointer-events-none flex items-center justify-center z-30">
-          <button type="button" id="btn-versus-next" onclick="nextQuestion()" class="pointer-events-auto animate-fade-in-up px-7 sm:px-10 py-4 sm:py-5 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-lg sm:text-2xl shadow-[0_10px_35px_rgba(0,0,0,0.45)] border-4 border-white active:scale-95 transition flex items-center gap-2.5">
+          <button type="button" id="btn-versus-next" onpointerdown="triggerNextQuestion(event)" class="pointer-events-auto animate-fade-in-up px-5 sm:px-10 py-3 sm:py-5 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-base sm:text-2xl shadow-[0_10px_35px_rgba(0,0,0,0.45)] border-4 border-white active:scale-95 transition flex items-center gap-2">
             <span>下一題</span>
-            <i class="fa-solid fa-circle-arrow-right text-xl sm:text-2xl"></i>
+            <i class="fa-solid fa-circle-arrow-right text-lg sm:text-2xl"></i>
           </button>
         </div>
 
@@ -1232,16 +1300,49 @@
       const textHome = document.getElementById('text-voice-home');
       const iconGame = document.getElementById('icon-voice-game');
       if (voiceEnabled) {
-        if (textHome) textHome.textContent = '🗣️ 語音播報：開';
+        if (textHome) textHome.textContent = '🗣️ 語音：開';
         if (iconGame) iconGame.textContent = '🗣️開';
         speakPrompt('語音播報已開啟');
       } else {
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-        if (textHome) textHome.textContent = '🗣️ 語音播報：關';
+        if (textHome) textHome.textContent = '🗣️ 語音：關';
         if (iconGame) iconGame.textContent = '🗣️關';
         playClick();
       }
     }
+
+    // 切換全螢幕 (支援觸屏大屏與平板)
+    function toggleFullscreen() {
+      playClick();
+      try {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+          const docEl = document.documentElement;
+          if (docEl.requestFullscreen) {
+            docEl.requestFullscreen().catch(() => {});
+          } else if (docEl.webkitRequestFullscreen) {
+            docEl.webkitRequestFullscreen();
+          }
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          }
+        }
+      } catch (e) {}
+    }
+
+    function updateFullscreenIcons() {
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      ['icon-fullscreen-home', 'icon-fullscreen-game'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.className = isFs ? 'fa-solid fa-compress text-xs sm:text-sm' : 'fa-solid fa-expand text-xs sm:text-sm';
+        }
+      });
+    }
+    document.addEventListener('fullscreenchange', updateFullscreenIcons);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
 
     // 切換總音效開關
     function toggleSound() {
@@ -1255,9 +1356,9 @@
       if (soundEnabled) {
         unlockWebAudio();
         if (iconHome) iconHome.className = 'fa-solid fa-volume-high';
-        if (textHome) textHome.textContent = '🔊 音效：開啟';
-        if (iconGame) iconGame.className = 'fa-solid fa-volume-high text-sm';
-        if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
+        if (textHome) textHome.textContent = '🔊 音效：開';
+        if (iconGame) iconGame.className = 'fa-solid fa-volume-high text-xs sm:text-sm';
+        if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0';
         if (statusText) {
           statusText.className = 'font-black text-xs sm:text-sm text-emerald-300';
           statusText.textContent = '🟢 音效引擎就緒（WAV實體音檔 + WebAudio 雙引擎）';
@@ -1266,9 +1367,9 @@
       } else {
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         if (iconHome) iconHome.className = 'fa-solid fa-volume-xmark';
-        if (textHome) textHome.textContent = '🔇 音效：靜音';
-        if (iconGame) iconGame.className = 'fa-solid fa-volume-xmark text-sm text-rose-400';
-        if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500';
+        if (textHome) textHome.textContent = '🔇 音效：關';
+        if (iconGame) iconGame.className = 'fa-solid fa-volume-xmark text-xs sm:text-sm text-rose-400';
+        if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0';
         if (statusText) {
           statusText.className = 'font-black text-xs sm:text-sm text-rose-300';
           statusText.textContent = '🔴 目前為靜音狀態（點擊按鈕即可恢復聲音）';
@@ -1303,6 +1404,7 @@
       // 單題3秒倒數計時
       questionPhase: 'answering', // 'answering' | 'feedback'
       questionStartTimeMs: 0,
+      feedbackShownAtMs: 0,
       questionDurationMs: 3000,
       questionRafId: null,
       lastTickSec: 3,
@@ -1355,13 +1457,13 @@
       const badgeVersus = document.getElementById('badge-mode-versus');
 
       if (mode === 'single') {
-        btnSingle.className = 'mode-card group relative rounded-2xl p-4 text-left border-2 border-indigo-600 bg-indigo-50/80 transition-all flex flex-col justify-between';
-        btnVersus.className = 'mode-card group relative rounded-2xl p-4 text-left border-2 border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between';
+        btnSingle.className = 'mode-card group relative rounded-2xl p-3 sm:p-4 text-left border-2 border-indigo-600 bg-indigo-50/80 transition-all flex flex-col justify-between active:scale-95';
+        btnVersus.className = 'mode-card group relative rounded-2xl p-3 sm:p-4 text-left border-2 border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between active:scale-95';
         badgeSingle.classList.remove('hidden');
         badgeVersus.classList.add('hidden');
       } else {
-        btnVersus.className = 'mode-card group relative rounded-2xl p-4 text-left border-2 border-rose-600 bg-rose-50/80 transition-all flex flex-col justify-between';
-        btnSingle.className = 'mode-card group relative rounded-2xl p-4 text-left border-2 border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between';
+        btnVersus.className = 'mode-card group relative rounded-2xl p-3 sm:p-4 text-left border-2 border-rose-600 bg-rose-50/80 transition-all flex flex-col justify-between active:scale-95';
+        btnSingle.className = 'mode-card group relative rounded-2xl p-3 sm:p-4 text-left border-2 border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between active:scale-95';
         badgeVersus.classList.remove('hidden');
         badgeSingle.classList.add('hidden');
       }
@@ -1375,13 +1477,13 @@
         const numDiv = btn.children[0];
         const subDiv = btn.children[1];
         if (sec === seconds) {
-          btn.className = 'time-card rounded-2xl p-3.5 text-center border-2 border-emerald-600 bg-emerald-50/80 transition-all';
-          numDiv.className = 'text-2xl sm:text-3xl font-black text-emerald-800';
-          subDiv.className = 'text-xs font-bold text-emerald-700 mt-1';
+          btn.className = 'time-card rounded-2xl p-2.5 sm:p-3.5 text-center border-2 border-emerald-600 bg-emerald-50/80 transition-all active:scale-95';
+          numDiv.className = 'text-xl sm:text-3xl font-black text-emerald-800';
+          subDiv.className = 'text-[11px] sm:text-xs font-bold text-emerald-700 mt-0.5';
         } else {
-          btn.className = 'time-card rounded-2xl p-3.5 text-center border-2 border-slate-200 bg-white hover:border-slate-300 transition-all';
-          numDiv.className = 'text-2xl sm:text-3xl font-black text-slate-800';
-          subDiv.className = 'text-xs font-bold text-slate-500 mt-1';
+          btn.className = 'time-card rounded-2xl p-2.5 sm:p-3.5 text-center border-2 border-slate-200 bg-white hover:border-slate-300 transition-all active:scale-95';
+          numDiv.className = 'text-xl sm:text-3xl font-black text-slate-800';
+          subDiv.className = 'text-[11px] sm:text-xs font-bold text-slate-500 mt-0.5';
         }
       });
       playClick();
@@ -1588,13 +1690,22 @@
       timerEl.textContent = formatted;
 
       if (sec <= 10) {
-        timerEl.className = 'font-mono font-black text-xl sm:text-2xl tracking-wider text-rose-400 animate-urgent';
+        timerEl.className = 'font-mono font-black text-base sm:text-2xl tracking-wider text-rose-400 animate-urgent';
       } else {
-        timerEl.className = 'font-mono font-black text-xl sm:text-2xl tracking-wider text-white';
+        timerEl.className = 'font-mono font-black text-base sm:text-2xl tracking-wider text-white';
       }
 
       const pct = (sec / gameConfig.durationSec) * 100;
       document.getElementById('global-timer-bar').style.width = `${pct}%`;
+    }
+
+    // 觸控防誤觸「下一題」觸發器（避免搶答瞬間誤按剛彈出的下一題）
+    function triggerNextQuestion(evt) {
+      if (evt && typeof evt.preventDefault === 'function') {
+        evt.preventDefault();
+      }
+      if (performance.now() - gameState.feedbackShownAtMs < 180) return;
+      nextQuestion();
     }
 
     function nextQuestion() {
@@ -1643,7 +1754,7 @@
 
       timerBarEl.style.width = '100%';
       timerBarEl.className = 'h-full rounded-full bg-emerald-500';
-      timerBadgeEl.className = 'flex items-center gap-1 font-mono font-black text-lg sm:text-2xl text-emerald-600';
+      timerBadgeEl.className = 'flex items-center gap-1 font-mono font-black text-base sm:text-2xl text-emerald-600';
 
       function tick(now) {
         if (!gameState.isRunning || gameState.questionPhase !== 'answering') return;
@@ -1664,10 +1775,10 @@
 
         if (remainingSec <= 1.0) {
           timerBarEl.className = 'h-full rounded-full bg-rose-600';
-          timerBadgeEl.className = 'flex items-center gap-1 font-mono font-black text-lg sm:text-2xl text-rose-600 animate-urgent';
+          timerBadgeEl.className = 'flex items-center gap-1 font-mono font-black text-base sm:text-2xl text-rose-600 animate-urgent';
         } else if (remainingSec <= 2.0) {
           timerBarEl.className = 'h-full rounded-full bg-amber-500';
-          timerBadgeEl.className = 'flex items-center gap-1 font-mono font-black text-lg sm:text-2xl text-amber-600';
+          timerBadgeEl.className = 'flex items-center gap-1 font-mono font-black text-base sm:text-2xl text-amber-600';
         }
 
         if (remainingMs <= 0) {
@@ -1703,13 +1814,17 @@
       }
     }
 
-    function handleSingleAnswer(choiceIndex) {
+    function handleSingleAnswer(choiceIndex, evt) {
+      if (evt && typeof evt.preventDefault === 'function') {
+        evt.preventDefault();
+      }
       if (!gameState.isRunning || gameState.questionPhase !== 'answering') return;
       resolveSingleAnswer(choiceIndex);
     }
 
     function resolveSingleAnswer(choiceIndex) {
       gameState.questionPhase = 'feedback';
+      gameState.feedbackShownAtMs = performance.now();
       if (gameState.questionRafId) {
         cancelAnimationFrame(gameState.questionRafId);
         gameState.questionRafId = null;
@@ -1801,20 +1916,20 @@
       totalEl.textContent = `累積得分：${s.score} 分`;
 
       if (isCorrect) {
-        box.className = 'rounded-3xl p-4 sm:p-5 border-2 border-emerald-500 bg-emerald-50/95 shadow-xl animate-fade-in-up';
-        icon.className = 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl sm:text-3xl shrink-0 font-black shadow';
+        box.className = 'rounded-2xl sm:rounded-3xl p-3 sm:p-4 md:p-5 border-2 border-emerald-500 bg-emerald-50/95 shadow-xl animate-fade-in-up shrink-0';
+        icon.className = 'w-10 h-10 sm:w-14 sm:h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-xl sm:text-3xl shrink-0 font-black shadow';
         icon.innerHTML = '<i class="fa-solid fa-check"></i>';
-        title.className = 'text-lg sm:text-2xl font-black text-emerald-900';
-        title.textContent = s.correctStreak > 1 ? `太棒了！連續答對 ${s.correctStreak} 題！` : '回答正確！';
-        deltaEl.className = 'px-3 py-0.5 rounded-full text-sm sm:text-base font-black bg-emerald-600 text-white';
+        title.className = 'text-base sm:text-2xl font-black text-emerald-900';
+        title.textContent = s.correctStreak > 1 ? `太棒了！連對 ${s.correctStreak} 題！` : '回答正確！';
+        deltaEl.className = 'px-2.5 py-0.5 rounded-full text-xs sm:text-base font-black bg-emerald-600 text-white';
         deltaEl.textContent = `+${deltaScore} 分`;
       } else {
-        box.className = 'rounded-3xl p-4 sm:p-5 border-2 border-rose-500 bg-rose-50/95 shadow-xl animate-fade-in-up';
-        icon.className = 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-rose-600 text-white flex items-center justify-center text-2xl sm:text-3xl shrink-0 font-black shadow';
+        box.className = 'rounded-2xl sm:rounded-3xl p-3 sm:p-4 md:p-5 border-2 border-rose-500 bg-rose-50/95 shadow-xl animate-fade-in-up shrink-0';
+        icon.className = 'w-10 h-10 sm:w-14 sm:h-14 rounded-2xl bg-rose-600 text-white flex items-center justify-center text-xl sm:text-3xl shrink-0 font-black shadow';
         icon.innerHTML = isTimeout ? '<i class="fa-regular fa-hourglass-half"></i>' : '<i class="fa-solid fa-xmark"></i>';
-        title.className = 'text-lg sm:text-2xl font-black text-rose-900';
-        title.textContent = isTimeout ? '超過 3 秒未作答！' : '答錯了！請看正確選項說明：';
-        deltaEl.className = 'px-3 py-0.5 rounded-full text-sm sm:text-base font-black bg-rose-600 text-white';
+        title.className = 'text-base sm:text-2xl font-black text-rose-900';
+        title.textContent = isTimeout ? '超過 3 秒未作答！' : '答錯了！請看正確說明：';
+        deltaEl.className = 'px-2.5 py-0.5 rounded-full text-xs sm:text-base font-black bg-rose-600 text-white';
         deltaEl.textContent = `${deltaScore} 分`;
       }
 
@@ -1844,7 +1959,10 @@
       document.getElementById('versus-center-next-wrapper').classList.add('hidden');
     }
 
-    function handleVersusAnswer(team, choiceIndex) {
+    function handleVersusAnswer(team, choiceIndex, evt) {
+      if (evt && typeof evt.preventDefault === 'function') {
+        evt.preventDefault();
+      }
       if (!gameState.isRunning || gameState.questionPhase !== 'answering') return;
       const teamData = gameState.versus[team];
 
@@ -1869,7 +1987,7 @@
 
       const lockBanner = document.getElementById(`${team}-lock-banner`);
       const lockText = document.getElementById(`${team}-lock-text`);
-      lockText.textContent = `已鎖定答案（耗時 ${(elapsedMs / 1000).toFixed(2)} 秒），等待開獎...`;
+      lockText.textContent = `已鎖定 (${(elapsedMs / 1000).toFixed(2)}s)，等待開獎...`;
       lockBanner.classList.remove('hidden');
 
       if (gameState.versus.red.answered && gameState.versus.white.answered) {
@@ -1880,6 +1998,7 @@
     function resolveVersusRound() {
       if (gameState.questionPhase !== 'answering') return;
       gameState.questionPhase = 'feedback';
+      gameState.feedbackShownAtMs = performance.now();
 
       if (gameState.questionRafId) {
         cancelAnimationFrame(gameState.questionRafId);
@@ -1991,37 +2110,37 @@
       }
 
       if (isCorrect) {
-        card.className = 'rounded-2xl p-2.5 sm:p-3.5 border-2 border-emerald-500 bg-emerald-50/95 text-left animate-fade-in-up';
-        badge.className = 'w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center font-black text-sm text-white';
+        card.className = 'rounded-xl sm:rounded-2xl p-2 sm:p-3 border-2 border-emerald-500 bg-emerald-50/95 text-left animate-fade-in-up shrink-0';
+        badge.className = 'w-5 h-5 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-emerald-600 flex items-center justify-center font-black text-xs sm:text-sm text-white shrink-0';
         badge.innerHTML = '<i class="fa-solid fa-check"></i>';
-        status.className = 'font-black text-sm sm:text-lg text-emerald-900';
-        status.textContent = t.correctStreak > 1 ? `連對 ${t.correctStreak} 題！` : '回答正確！';
-        deltaEl.className = 'px-2.5 py-0.5 rounded-full font-black text-xs sm:text-sm bg-emerald-600 text-white';
+        status.className = 'font-black text-xs sm:text-lg text-emerald-900';
+        status.textContent = t.correctStreak > 1 ? `連對 ${t.correctStreak} 題！` : '答對了！';
+        deltaEl.className = 'px-2 py-0.5 rounded-full font-black text-[11px] sm:text-sm bg-emerald-600 text-white';
         deltaEl.textContent = `+${deltaScore} 分`;
 
         const timeStr = (t.timeMs / 1000).toFixed(2);
         detailEl.innerHTML = `
-          <span>耗時 ${timeStr}s</span>
+          <span>${timeStr}s</span>
           <span>•</span>
-          <span>本題 +${t.correctStreak}${hasFastestBonus ? ' (含搶答成功+3)' : ''}</span>
+          <span>+${t.correctStreak}${hasFastestBonus ? '(搶答+3)' : ''}</span>
           <span>•</span>
-          <span class="font-black text-emerald-900">累積：${t.score} 分</span>
+          <span class="font-black text-emerald-900">累積：${t.score}分</span>
         `;
       } else {
-        card.className = 'rounded-2xl p-2.5 sm:p-3.5 border-2 border-rose-500 bg-rose-50/95 text-left animate-fade-in-up';
-        badge.className = 'w-7 h-7 rounded-lg bg-rose-600 flex items-center justify-center font-black text-sm text-white';
+        card.className = 'rounded-xl sm:rounded-2xl p-2 sm:p-3 border-2 border-rose-500 bg-rose-50/95 text-left animate-fade-in-up shrink-0';
+        badge.className = 'w-5 h-5 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-rose-600 flex items-center justify-center font-black text-xs sm:text-sm text-white shrink-0';
         badge.innerHTML = isTimeout ? '<i class="fa-regular fa-clock"></i>' : '<i class="fa-solid fa-xmark"></i>';
-        status.className = 'font-black text-sm sm:text-lg text-rose-900';
-        status.textContent = isTimeout ? '未在3秒內作答！' : '回答錯誤！';
-        deltaEl.className = 'px-2.5 py-0.5 rounded-full font-black text-xs sm:text-sm bg-rose-600 text-white';
+        status.className = 'font-black text-xs sm:text-lg text-rose-900';
+        status.textContent = isTimeout ? '超時未答！' : '答錯了！';
+        deltaEl.className = 'px-2 py-0.5 rounded-full font-black text-[11px] sm:text-sm bg-rose-600 text-white';
         deltaEl.textContent = `${deltaScore} 分`;
 
         detailEl.innerHTML = `
           <span>正確：</span>
-          <span class="inline-block w-4 h-4 rounded border border-slate-400" style="background-color:${q.bgColor};"></span>
+          <span class="inline-block w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border border-slate-400 shrink-0" style="background-color:${q.bgColor};"></span>
           <span class="font-black text-slate-900">${q.answerText}</span>
           <span>•</span>
-          <span class="font-black text-rose-900">累積：${t.score} 分</span>
+          <span class="font-black text-rose-900">累積：${t.score}分</span>
         `;
       }
 

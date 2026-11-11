@@ -3,16 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>丹青極速決</title>
-  <!-- Tailwind CSS -->
+  <title>丹青極速決｜漢字色彩辨識互動遊戲</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Noto Serif TC & Noto Sans TC -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@600;700;900&display=swap" rel="stylesheet">
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
   <style>
     :root {
       --font-serif: 'Noto Serif TC', serif;
@@ -22,1532 +15,1070 @@
 
     * {
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
       user-select: none;
       -webkit-user-select: none;
-      -webkit-touch-callout: none;
-      -webkit-tap-highlight-color: transparent;
     }
 
     html, body {
-      width: 100%;
-      min-height: 100%;
       margin: 0;
       padding: 0;
-    }
-
-    body {
+      width: 100%;
+      height: 100%;
+      height: var(--app-height);
       font-family: var(--font-sans);
-      background-color: #f7f4eb;
-      background-image: 
-        radial-gradient(at 15% 15%, rgba(128, 164, 146, 0.14) 0px, transparent 50%),
-        radial-gradient(at 85% 20%, rgba(227, 66, 52, 0.10) 0px, transparent 50%),
-        radial-gradient(at 50% 85%, rgba(22, 97, 171, 0.10) 0px, transparent 50%);
-      color: #1e293b;
-      overflow-x: hidden;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      touch-action: manipulation;
+      background-color: #FAF6F0;
+      color: #1E293B;
+      overflow: hidden;
     }
 
-    .font-serif-tc {
+    .serif-title {
       font-family: var(--font-serif);
     }
 
-    /* 動態視窗高度容器 (透過 JS 即時同步 window.innerHeight，徹底解決手機網址列遮擋問題) */
-    .game-viewport {
-      height: var(--app-height, 100dvh);
-      max-height: var(--app-height, 100dvh);
-      padding-top: env(safe-area-inset-top, 0px);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-      padding-left: env(safe-area-inset-left, 0px);
-      padding-right: env(safe-area-inset-right, 0px);
+    .paper-bg {
+      background-color: #FAF6F0;
+      background-image: 
+        radial-gradient(at 15% 15%, rgba(227, 66, 52, 0.06) 0px, transparent 50%),
+        radial-gradient(at 85% 85%, rgba(42, 205, 150, 0.07) 0px, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(22, 97, 171, 0.04) 0px, transparent 60%);
     }
 
-    /* 彈性字級：自動依手機、平板、觸控大屏縮放 */
-    .fluid-question-title {
-      font-size: clamp(1.65rem, 5.2vw, 4.25rem);
-      line-height: 1.15;
+    #homeScreen {
+      height: var(--app-height);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
     }
 
-    .fluid-single-opt {
-      font-size: clamp(1.6rem, 4.8vw, 3.75rem);
-      line-height: 1.15;
+    #gameScreen {
+      height: var(--app-height);
+      overflow: hidden;
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
-    .fluid-versus-opt {
-      font-size: clamp(1.25rem, 3.8vw, 2.75rem);
-      line-height: 1.15;
-    }
-
-    /* 手機橫向或低高度螢幕緊湊最佳化 */
-    @media (max-height: 640px) {
-      .compact-py {
-        padding-top: 0.25rem !important;
-        padding-bottom: 0.25rem !important;
-      }
-      .compact-my {
-        margin-top: 0.15rem !important;
-        margin-bottom: 0.15rem !important;
-      }
-      .fluid-question-title {
-        font-size: clamp(1.35rem, 4vw, 2.2rem);
-      }
-      .fluid-single-opt {
-        font-size: clamp(1.35rem, 3.5vw, 2.1rem);
-      }
-      .fluid-versus-opt {
-        font-size: clamp(1.1rem, 2.8vw, 1.75rem);
-      }
-    }
-
-    /* 宣紙紋理裝飾框 */
-    .paper-card {
-      background: rgba(255, 253, 249, 0.94);
-      backdrop-filter: blur(8px);
-      border: 2px solid rgba(30, 41, 59, 0.12);
-      box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-    }
-
-    /* 遊戲色卡按鈕立體與觸控特效 */
-    .color-option-card {
+    .color-option-btn {
+      transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease, opacity 0.2s ease, filter 0.2s ease;
       position: relative;
-      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease, filter 0.12s ease;
-      cursor: pointer;
       overflow: hidden;
       touch-action: manipulation;
+      cursor: pointer;
     }
 
-    .color-option-card:active:not(:disabled) {
+    .color-option-btn:active:not(:disabled) {
       transform: scale(0.96);
     }
 
-    @media (hover: hover) {
-      .color-option-card:hover:not(:disabled) {
-        transform: translateY(-3px);
-      }
+    .color-option-btn:disabled {
+      cursor: default;
     }
 
-    /* 答對彈跳發光動畫 */
-    @keyframes popSuccess {
+    /* 100% 不透明實心回饋對話框樣式 */
+    .solid-feedback-modal {
+      background-color: #FFFFFF !important;
+      opacity: 1 !important;
+      backdrop-filter: none !important;
+      box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.45), 0 0 0 2px rgba(15, 23, 42, 0.08);
+    }
+
+    /* 回饋彈出時的背景遮罩，壓暗底下的色卡與文字避免干擾 */
+    .feedback-backdrop {
+      background-color: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+    }
+
+    @keyframes shakeWrong {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px) rotate(-1deg); }
+      40% { transform: translateX(8px) rotate(1deg); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
+    .anim-shake {
+      animation: shakeWrong 0.4s ease-in-out;
+    }
+
+    @keyframes popCorrect {
       0% { transform: scale(0.92); }
-      50% { transform: scale(1.04); }
+      50% { transform: scale(1.03); }
       100% { transform: scale(1); }
     }
-    .animate-pop-success {
-      animation: popSuccess 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    .anim-pop {
+      animation: popCorrect 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    /* 答錯或超時左右搖晃動畫 */
-    @keyframes shakeError {
-      0%, 100% { transform: translateX(0); }
-      20% { transform: translateX(-10px) rotate(-1deg); }
-      40% { transform: translateX(10px) rotate(1deg); }
-      60% { transform: translateX(-7px) rotate(-0.5deg); }
-      80% { transform: translateX(7px) rotate(0.5deg); }
-    }
-    .animate-shake-error {
-      animation: shakeError 0.45s ease-in-out forwards;
-    }
-
-    /* 3秒倒數緊急脈衝 */
-    @keyframes urgentPulse {
+    @keyframes pulseUrgent {
       0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.12); }
+      50% { transform: scale(1.06); }
     }
-    .animate-urgent {
-      animation: urgentPulse 0.35s infinite ease-in-out;
-    }
-
-    /* 浮現動畫 */
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(12px) scale(0.97);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-    .animate-fade-in-up {
-      animation: fadeInUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    .anim-urgent {
+      animation: pulseUrgent 0.4s infinite;
     }
 
-    /* 題目引號關鍵字強調 */
-    .highlight-char {
+    .target-char {
       display: inline-block;
-      color: #b91c1c;
-      background: linear-gradient(180deg, transparent 62%, rgba(254, 202, 202, 0.75) 62%);
       padding: 0 0.12em;
-      border-radius: 4px;
+      margin: 0 0.04em;
+      border-radius: 0.22em;
+      background: linear-gradient(180deg, transparent 62%, rgba(251, 191, 36, 0.45) 62%);
+      color: #B91C1C;
       font-weight: 900;
     }
 
-    /* 自訂捲軸 */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+    .question-text-responsive {
+      font-size: clamp(1.55rem, 4.5vw, 3.25rem);
+      line-height: 1.2;
     }
-    ::-webkit-scrollbar-track {
-      background: #f1f5f9;
+    .solo-option-text {
+      font-size: clamp(1.6rem, 5vw, 3.2rem);
     }
-    ::-webkit-scrollbar-thumb {
-      background: #94a3b8;
-      border-radius: 9999px;
+    .versus-option-text {
+      font-size: clamp(1.2rem, 3.2vw, 2.25rem);
     }
 
-    /* 音浪跳動視覺動畫 */
-    @keyframes eqBounce {
-      0%, 100% { transform: scaleY(0.25); }
+    @media (max-height: 520px) and (orientation: landscape) {
+      .compact-landscape-header {
+        padding-top: 0.25rem !important;
+        padding-bottom: 0.25rem !important;
+      }
+      .compact-landscape-qbox {
+        padding-top: 0.35rem !important;
+        padding-bottom: 0.35rem !important;
+      }
+      .question-text-responsive {
+        font-size: clamp(1.25rem, 3.5vw, 2rem);
+      }
+    }
+
+    @keyframes soundWave {
+      0%, 100% { transform: scaleY(0.35); }
       50% { transform: scaleY(1); }
     }
-    .eq-bar {
-      display: inline-block;
-      width: 4px;
-      height: 18px;
-      border-radius: 9999px;
-      transform: scaleY(0.25);
-      transform-origin: bottom;
-      transition: transform 0.15s ease;
+    .wave-bar {
+      animation: soundWave 0.45s ease-in-out infinite;
     }
-    .eq-active .eq-bar:nth-child(1) { animation: eqBounce 0.32s infinite ease-in-out 0.0s; }
-    .eq-active .eq-bar:nth-child(2) { animation: eqBounce 0.32s infinite ease-in-out 0.08s; }
-    .eq-active .eq-bar:nth-child(3) { animation: eqBounce 0.32s infinite ease-in-out 0.16s; }
-    .eq-active .eq-bar:nth-child(4) { animation: eqBounce 0.32s infinite ease-in-out 0.10s; }
-    .eq-active .eq-bar:nth-child(5) { animation: eqBounce 0.32s infinite ease-in-out 0.04s; }
   </style>
 </head>
-<body class="min-h-screen w-full flex flex-col justify-between select-none">
+<body class="paper-bg flex flex-col justify-between relative">
 
-  <!-- 禮花特效 Canvas (用於勝利祝賀) -->
-  <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50 hidden"></canvas>
+  <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50 hidden"></canvas>
 
-  <!-- ==================== 1. 首頁設定畫面 (HOME VIEW) ==================== -->
-  <main id="view-home" class="w-full min-h-screen flex flex-col items-center justify-start sm:justify-center p-2.5 sm:p-5 md:p-6 max-w-6xl mx-auto pb-8">
-    <div class="paper-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-7 md:p-8 w-full border-2 border-slate-800/15 relative overflow-hidden my-auto">
-      <!-- 頂部傳統色帶裝飾 -->
+  <!-- ==================== 首頁設定畫面 ==================== -->
+  <main id="homeScreen" class="w-full flex flex-col items-center justify-start sm:justify-center px-3 sm:px-6 py-4 z-10">
+    <div class="max-w-3xl w-full bg-white rounded-3xl shadow-2xl border border-stone-200 p-4 sm:p-7 relative overflow-hidden my-auto">
       <div class="absolute top-0 left-0 right-0 h-2.5 flex">
-        <div class="flex-1" style="background-color: #80A492;"></div>
-        <div class="flex-1" style="background-color: #134857;"></div>
-        <div class="flex-1" style="background-color: #2ACD96;"></div>
-        <div class="flex-1" style="background-color: #1661AB;"></div>
-        <div class="flex-1" style="background-color: #C13221;"></div>
-        <div class="flex-1" style="background-color: #E34234;"></div>
-        <div class="flex-1" style="background-color: #4A4F55;"></div>
-        <div class="flex-1" style="background-color: #000000;"></div>
+        <div class="flex-1 bg-[#80A492]"></div>
+        <div class="flex-1 bg-[#134857]"></div>
+        <div class="flex-1 bg-[#2ACD96]"></div>
+        <div class="flex-1 bg-[#1661AB]"></div>
+        <div class="flex-1 bg-[#C13221]"></div>
+        <div class="flex-1 bg-[#4A4F55]"></div>
       </div>
 
-      <!-- 頂部標籤與題庫預覽按鈕列 -->
-      <div class="flex flex-wrap items-center justify-between gap-2 mt-1.5 mb-2.5">
-        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100/90 border border-amber-300 text-amber-900 text-[11px] sm:text-sm font-bold">
-          <i class="fa-solid fa-palette"></i>
-          <span>國語文色彩詞彙極速辨識互動遊戲</span>
+      <!-- 標題區 -->
+      <div class="text-center mt-1 mb-3 sm:mb-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100/90 text-amber-900 text-xs font-bold tracking-widest mb-1.5">
+          <span>漢字色彩極速辨識挑戰</span>
         </div>
-        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-          <button id="btn-open-bank" type="button" class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold text-xs sm:text-sm transition flex items-center gap-1.5 border border-slate-300">
-            <i class="fa-solid fa-book-open"></i>
-            <span>題庫 (18題)</span>
-          </button>
-          <button id="btn-toggle-voice-home" type="button" onclick="toggleVoice()" class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-indigo-100 hover:bg-indigo-200 active:scale-95 text-indigo-900 font-bold text-xs sm:text-sm transition flex items-center gap-1.5 border border-indigo-300">
-            <i class="fa-solid fa-comment-dots"></i>
-            <span id="text-voice-home">🗣️ 語音：關</span>
-          </button>
-          <button id="btn-toggle-sound-home" type="button" onclick="toggleSound()" class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white font-bold text-xs sm:text-sm transition flex items-center gap-1.5">
-            <i id="icon-sound-home" class="fa-solid fa-volume-high"></i>
-            <span id="text-sound-home">🔊 音效：開</span>
-          </button>
-          <button id="btn-fullscreen-home" type="button" onclick="toggleFullscreen()" class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-black text-xs sm:text-sm transition flex items-center gap-1.5 shadow-sm">
-            <i id="icon-fullscreen-home" class="fa-solid fa-expand"></i>
-            <span class="hidden xs:inline">全螢幕</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- 固定遊戲標題 -->
-      <div class="text-center my-1.5 sm:my-3">
-        <h1 class="font-serif-tc text-3xl sm:text-5xl md:text-6xl font-black tracking-wider text-slate-900 drop-shadow-sm">
+        <h1 class="serif-title text-3xl sm:text-5xl font-black tracking-tight text-slate-900 mb-1">
           丹青極速決
         </h1>
-        <p class="text-slate-600 text-xs sm:text-base mt-1 font-medium">
-          縹碧丹朱黛皂白・三秒瞬間辨真色（支援觸屏・平板・手機同屏對戰）
+        <p class="text-slate-500 text-xs sm:text-sm">
+          支援手機、平板、教室觸控大屏｜限時 3 秒二選一・連對累進加分
         </p>
       </div>
 
-      <!-- 視覺化「🔊 音效測試與狀態檢測面板」 -->
-      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-3 sm:p-4 mb-3 sm:mb-5 border-2 border-amber-400/60 shadow-md">
-        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2.5 sm:gap-3">
-          <!-- 左側：引擎狀態燈號與音浪動畫 -->
-          <div class="flex items-center gap-2.5 sm:gap-3">
-            <div id="sound-eq-visualizer" class="flex items-end gap-1 px-2 py-1.5 rounded-xl bg-slate-950/90 border border-slate-700 h-9 sm:h-10 shrink-0">
-              <span class="eq-bar bg-emerald-400"></span>
-              <span class="eq-bar bg-amber-400"></span>
-              <span class="eq-bar bg-rose-400"></span>
-              <span class="eq-bar bg-sky-400"></span>
-              <span class="eq-bar bg-emerald-400"></span>
-            </div>
-            <div>
-              <div class="flex items-center gap-1.5">
-                <span id="audio-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
-                <span id="audio-status-text" class="font-black text-xs sm:text-sm text-emerald-300">
-                  🟢 音效引擎就緒（WAV實體音檔 + WebAudio 雙引擎）
-                </span>
-              </div>
-              <div id="audio-last-triggered" class="text-[11px] sm:text-xs text-slate-300 mt-0.5">
-                請點擊按鈕測試喇叭音量（支援大屏、平板與手機多點觸控）
-              </div>
+      <!-- 音效測試與音量控制面板 -->
+      <div class="mb-4 bg-indigo-50 border border-indigo-200 rounded-2xl p-2.5 sm:p-3.5 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+        <div class="flex items-center gap-2.5 w-full sm:w-auto">
+          <div id="soundIndicatorIcon" class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+            <div class="flex items-end gap-0.5 h-4" id="waveBars" style="opacity: 0.45;">
+              <span class="w-1 h-2 bg-white rounded-full"></span>
+              <span class="w-1 h-4 bg-white rounded-full"></span>
+              <span class="w-1 h-3 bg-white rounded-full"></span>
             </div>
           </div>
-
-          <!-- 右側：測試按鈕與音量拉桿 -->
-          <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-between lg:justify-end">
-            <div class="flex items-center gap-1.5 sm:gap-2">
-              <button type="button" onclick="testSoundEffect('correct')" class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm shadow active:scale-95 transition flex items-center gap-1.5">
-                <i class="fa-solid fa-volume-high"></i>
-                <span>測試答對</span>
-              </button>
-              <button type="button" onclick="testSoundEffect('wrong')" class="px-3 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs sm:text-sm shadow active:scale-95 transition flex items-center gap-1.5">
-                <i class="fa-solid fa-bell"></i>
-                <span>測試答錯</span>
-              </button>
+          <div class="text-left flex-1">
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs sm:text-sm font-black text-indigo-950">音效與語音面板</span>
+              <span id="audioStatusBadge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900">點擊按鈕解鎖聲音</span>
             </div>
-
-            <!-- 音量拉桿 -->
-            <div class="flex items-center gap-1.5 bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-700">
-              <i class="fa-solid fa-sliders text-amber-400 text-xs"></i>
-              <label for="volume-slider" class="text-xs font-bold text-slate-300">音量</label>
-              <input id="volume-slider" type="range" min="0" max="100" value="100" oninput="updateMasterVolume(this.value)" class="w-16 sm:w-24 accent-amber-400 cursor-pointer" />
-              <span id="volume-label" class="font-mono text-xs font-black text-amber-300 w-8 text-right">100%</span>
-            </div>
+            <p class="text-[11px] text-indigo-700">iPhone / iPad 請確認側邊靜音鍵未開啟</p>
           </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-1.5 w-full sm:w-auto">
+          <button type="button" onclick="testAudioWithFeedback('correct')" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs shadow transition flex items-center gap-1">
+            🔊 測試答對音
+          </button>
+          <button type="button" onclick="testAudioWithFeedback('wrong')" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-black text-xs shadow transition flex items-center gap-1">
+            🔔 測試答錯音
+          </button>
+          <button type="button" onclick="toggleVoiceReadout()" id="voiceToggleBtn" class="px-2.5 py-2 rounded-xl bg-white hover:bg-indigo-100 text-slate-600 font-bold text-xs border border-indigo-200 transition">
+            🗣️ 語音：關
+          </button>
+          <button type="button" onclick="toggleFullScreen()" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition">
+            ⛶ 全螢幕
+          </button>
         </div>
       </div>
 
-      <!-- 設定區塊：模式選擇 & 時間選擇 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5 my-3">
+      <!-- 模式與時間選擇 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 mb-4">
         <!-- 1. 選擇遊戲模式 -->
-        <div class="bg-white/90 rounded-2xl p-3.5 sm:p-5 border-2 border-slate-200 shadow-sm flex flex-col justify-between">
-          <div>
-            <div class="flex items-center gap-2 text-slate-800 font-black text-sm sm:text-lg mb-2.5">
-              <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-800 text-white flex items-center justify-center text-xs sm:text-sm">1</span>
-              <span>選擇遊戲模式</span>
-            </div>
-            <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
-              <!-- 一人遊戲 -->
-              <button type="button" id="mode-btn-single" onclick="selectMode('single')" class="mode-card group relative rounded-2xl p-3 sm:p-4 text-left border-2 border-indigo-600 bg-indigo-50/80 transition-all flex flex-col justify-between active:scale-95">
-                <div class="flex items-center justify-between mb-1.5 sm:mb-2">
-                  <span class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base sm:text-lg shadow">
-                    <i class="fa-solid fa-user-check"></i>
-                  </span>
-                  <span id="badge-mode-single" class="px-2 py-0.5 text-[11px] sm:text-xs font-black rounded-full bg-indigo-600 text-white">已選擇</span>
-                </div>
-                <div>
-                  <h3 class="font-black text-base sm:text-lg text-slate-900">一人遊戲</h3>
-                  <p class="text-[11px] sm:text-xs text-slate-600 mt-1 leading-relaxed">
-                    單人極速作答！連對累加得分（+1, +2, +3...），挑戰最高連勝。
-                  </p>
-                </div>
-              </button>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+            <span class="w-5 h-5 rounded-full bg-slate-800 text-white inline-flex items-center justify-center text-[11px]">1</span>
+            選擇遊戲模式
+          </label>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button type="button" id="modeBtnSolo" onclick="selectMode('solo')"
+              class="mode-btn group p-3 rounded-2xl border-2 border-slate-900 bg-slate-900 text-white text-left transition-all flex flex-col justify-between shadow-md">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xl">👤</span>
+                <span id="modeSoloCheck" class="w-4 h-4 rounded-full bg-emerald-400 text-slate-900 flex items-center justify-center text-[10px] font-black">✓</span>
+              </div>
+              <div>
+                <div class="font-black text-sm sm:text-base">一人遊戲</div>
+                <div class="text-[11px] text-slate-300 mt-0.5">單人極速連擊挑戰</div>
+              </div>
+            </button>
 
-              <!-- 兩人對戰模式 -->
-              <button type="button" id="mode-btn-versus" onclick="selectMode('versus')" class="mode-card group relative rounded-2xl p-3 sm:p-4 text-left border-2 border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between active:scale-95">
-                <div class="flex items-center justify-between mb-1.5 sm:mb-2">
-                  <span class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-base sm:text-lg shadow">
-                    <i class="fa-solid fa-user-group"></i>
-                  </span>
-                  <span id="badge-mode-versus" class="hidden px-2 py-0.5 text-[11px] sm:text-xs font-black rounded-full bg-rose-600 text-white">已選擇</span>
-                </div>
-                <div>
-                  <h3 class="font-black text-base sm:text-lg text-slate-900">兩人對戰模式</h3>
-                  <p class="text-[11px] sm:text-xs text-slate-600 mt-1 leading-relaxed">
-                    紅白同屏多點搶答！最快答對額外 <strong class="text-rose-600">+3分</strong>，三秒開獎。
-                  </p>
-                </div>
-              </button>
-            </div>
+            <button type="button" id="modeBtnVersus" onclick="selectMode('versus')"
+              class="mode-btn group p-3 rounded-2xl border-2 border-stone-200 bg-white text-slate-800 hover:border-slate-400 text-left transition-all flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xl">⚔️</span>
+                <span id="modeVersusCheck" class="w-4 h-4 rounded-full bg-stone-200 text-transparent flex items-center justify-center text-[10px] font-black">✓</span>
+              </div>
+              <div>
+                <div class="font-black text-sm sm:text-base">兩人對戰</div>
+                <div class="text-[11px] text-slate-500 mt-0.5">紅白同屏搶答 (+3分)</div>
+              </div>
+            </button>
           </div>
         </div>
 
         <!-- 2. 選擇遊戲時間 -->
-        <div class="bg-white/90 rounded-2xl p-3.5 sm:p-5 border-2 border-slate-200 shadow-sm flex flex-col justify-between">
-          <div>
-            <div class="flex items-center gap-2 text-slate-800 font-black text-sm sm:text-lg mb-2.5">
-              <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-800 text-white flex items-center justify-center text-xs sm:text-sm">2</span>
-              <span>選擇遊戲時間</span>
-            </div>
-            <div class="grid grid-cols-3 gap-2 sm:gap-3">
-              <button type="button" id="time-btn-60" onclick="selectDuration(60)" class="time-card rounded-2xl p-2.5 sm:p-3.5 text-center border-2 border-emerald-600 bg-emerald-50/80 transition-all active:scale-95">
-                <div class="text-xl sm:text-3xl font-black text-emerald-800">1<span class="text-xs sm:text-base ml-0.5">分鐘</span></div>
-                <div class="text-[11px] sm:text-xs font-bold text-emerald-700 mt-0.5">60 秒快節奏</div>
-              </button>
-              <button type="button" id="time-btn-180" onclick="selectDuration(180)" class="time-card rounded-2xl p-2.5 sm:p-3.5 text-center border-2 border-slate-200 bg-white hover:border-slate-300 transition-all active:scale-95">
-                <div class="text-xl sm:text-3xl font-black text-slate-800">3<span class="text-xs sm:text-base ml-0.5">分鐘</span></div>
-                <div class="text-[11px] sm:text-xs font-bold text-slate-500 mt-0.5">180 秒標準賽</div>
-              </button>
-              <button type="button" id="time-btn-300" onclick="selectDuration(300)" class="time-card rounded-2xl p-2.5 sm:p-3.5 text-center border-2 border-slate-200 bg-white hover:border-slate-300 transition-all active:scale-95">
-                <div class="text-xl sm:text-3xl font-black text-slate-800">5<span class="text-xs sm:text-base ml-0.5">分鐘</span></div>
-                <div class="text-[11px] sm:text-xs font-bold text-slate-500 mt-0.5">300 秒耐力賽</div>
-              </button>
-            </div>
-          </div>
-
-          <!-- 計分規則摘要 -->
-          <div class="mt-3 p-2.5 sm:p-3 rounded-xl bg-amber-50/90 border border-amber-200/80 text-[11px] sm:text-xs text-slate-700 space-y-0.5">
-            <div class="font-black text-amber-900 flex items-center gap-1.5">
-              <i class="fa-solid fa-bolt text-amber-600"></i>
-              <span>核心計分與作答規則：</span>
-            </div>
-            <p>• <strong>每題限時 3 秒</strong>：二選一色卡，錯誤選項自動從不同顏色分組挑選。</p>
-            <p>• <strong>連對累進加分</strong>：第1題 <span class="text-emerald-700 font-bold">+1</span>、連2題 <span class="text-emerald-700 font-bold">+2</span>、連3題 <span class="text-emerald-700 font-bold">+3</span>... 中斷則回歸 +1。</p>
-            <p>• <strong>連錯或超時扣分</strong>：第1次 <span class="text-rose-600 font-bold">-1</span>、連2次 <span class="text-rose-600 font-bold">-2</span>、連3次 <span class="text-rose-600 font-bold">-3</span>... 中斷回歸 -1。</p>
-            <p>• <strong>兩人對戰搶答獎勵</strong>：每題最快答對的小隊，額外再加 <span class="text-rose-600 font-bold">+3 分</span>！</p>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+            <span class="w-5 h-5 rounded-full bg-slate-800 text-white inline-flex items-center justify-center text-[11px]">2</span>
+            選擇挑戰時間
+          </label>
+          <div class="grid grid-cols-3 gap-2 h-[calc(100%-1.5rem)]">
+            <button type="button" onclick="selectDuration(60)" id="timeBtn60"
+              class="time-btn rounded-2xl border-2 border-slate-900 bg-slate-900 text-white font-black py-2.5 px-2 flex flex-col items-center justify-center transition-all shadow-md">
+              <span class="text-lg sm:text-xl">1</span>
+              <span class="text-[11px] font-medium opacity-80">分鐘</span>
+            </button>
+            <button type="button" onclick="selectDuration(180)" id="timeBtn180"
+              class="time-btn rounded-2xl border-2 border-stone-200 bg-white text-slate-800 hover:border-slate-400 font-black py-2.5 px-2 flex flex-col items-center justify-center transition-all">
+              <span class="text-lg sm:text-xl">3</span>
+              <span class="text-[11px] font-medium opacity-70">分鐘</span>
+            </button>
+            <button type="button" onclick="selectDuration(300)" id="timeBtn300"
+              class="time-btn rounded-2xl border-2 border-stone-200 bg-white text-slate-800 hover:border-slate-400 font-black py-2.5 px-2 flex flex-col items-center justify-center transition-all">
+              <span class="text-lg sm:text-xl">5</span>
+              <span class="text-[11px] font-medium opacity-70">分鐘</span>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- 開始遊戲大按鈕 -->
-      <div class="text-center mt-2">
-        <button type="button" onclick="startGame()" class="w-full sm:w-auto min-w-[260px] px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 hover:from-indigo-900 hover:to-slate-900 text-white font-black text-lg sm:text-2xl shadow-xl active:scale-95 transition-all inline-flex items-center justify-center gap-3 border-b-4 border-slate-950">
-          <i class="fa-solid fa-play text-amber-400"></i>
-          <span>開始挑戰</span>
-        </button>
+      <!-- 計分規則摘要 -->
+      <div class="bg-stone-50 rounded-2xl p-3 border border-stone-200/90 mb-4 text-xs text-slate-600 grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div class="flex items-start gap-1.5">
+          <span class="text-emerald-600 font-black">📈 連對加分：</span>
+          <span>第1題+1、連2題+2、連3題+3，中斷後重置為+1。</span>
+        </div>
+        <div class="flex items-start gap-1.5">
+          <span class="text-rose-600 font-black">📉 連錯扣分：</span>
+          <span>答錯或超時-1、連錯2題-2，中斷後重置為-1。</span>
+        </div>
+        <div class="flex items-start gap-1.5">
+          <span class="text-amber-600 font-black">⚡ 對戰搶答：</span>
+          <span>3秒內最快答對的小隊，額外獲得 <strong>+3分</strong>！</span>
+        </div>
       </div>
+
+      <!-- 開始遊戲按鈕 -->
+      <button type="button" onclick="startGame()"
+        class="w-full py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-black text-lg sm:text-xl tracking-wider shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+        <span>開始挑戰《丹青極速決》</span>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+      </button>
     </div>
   </main>
 
-  <!-- ==================== 2. 遊戲主畫面 (GAMEPLAY VIEW) ==================== -->
-  <section id="view-game" class="hidden fixed inset-0 game-viewport flex flex-col justify-between bg-[#f7f4eb] z-20 overflow-hidden">
+  <!-- ==================== 遊戲主畫面 ==================== -->
+  <section id="gameScreen" class="hidden w-full flex-col justify-between select-none">
     
-    <!-- 2A. 最上方導覽列：遊戲總時間倒數 & 分數列 -->
-    <header class="w-full bg-slate-900 text-white px-2.5 sm:px-6 py-1.5 sm:py-2.5 shadow-md z-30 shrink-0 compact-py">
-      <div class="max-w-7xl mx-auto flex items-center justify-between gap-1.5 sm:gap-2">
-        <!-- 左側：返回與遊戲標題 -->
-        <div class="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
-          <button type="button" onclick="returnToHome()" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-slate-700 transition shrink-0">
-            <i class="fa-solid fa-house"></i>
-            <span class="hidden md:inline">首頁</span>
-          </button>
-          <span class="font-serif-tc font-black text-sm sm:text-xl text-amber-300 tracking-wide truncate hidden xs:inline">
-            丹青極速決
-          </span>
-          <span id="header-question-count" class="px-2 sm:px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] sm:text-xs font-bold border border-slate-700 shrink-0">
-            第 1 題
-          </span>
-        </div>
-
-        <!-- 中央：遊戲總時間倒數 -->
-        <div class="flex items-center gap-1.5 sm:gap-2.5 bg-slate-800/90 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-2xl border border-slate-700 shrink-0">
-          <i class="fa-regular fa-clock text-amber-400 text-sm sm:text-lg"></i>
-          <div class="text-xs text-slate-400 font-bold hidden lg:block">剩餘時間</div>
-          <div id="global-timer-text" class="font-mono font-black text-base sm:text-2xl tracking-wider text-white">
-            01:00
-          </div>
-        </div>
-
-        <!-- 右側：即時比分概覽與音效/語音/全螢幕開關 -->
-        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <!-- 單人模式頂部分數 -->
-          <div id="header-score-single" class="flex items-center gap-1.5 bg-indigo-950/90 border border-indigo-700/70 px-2.5 sm:px-3.5 py-1 rounded-xl">
-            <span class="text-[11px] sm:text-xs text-indigo-200 font-bold hidden sm:inline">累積得分</span>
-            <span id="single-top-score" class="font-mono font-black text-base sm:text-xl text-amber-300">0</span>
-          </div>
-
-          <!-- 雙人模式頂部紅白比分 -->
-          <div id="header-score-versus" class="hidden items-center gap-1 sm:gap-2 text-xs sm:text-sm font-black">
-            <div class="px-2 py-0.5 sm:py-1 rounded-lg bg-rose-700 text-white flex items-center gap-1">
-              <span class="hidden sm:inline">紅隊</span>
-              <span class="sm:hidden">紅</span>
-              <span id="versus-top-red" class="font-mono text-sm sm:text-lg text-amber-200">0</span>
-            </div>
-            <span class="text-slate-400 text-[10px] sm:text-xs">VS</span>
-            <div class="px-2 py-0.5 sm:py-1 rounded-lg bg-slate-100 text-slate-900 flex items-center gap-1">
-              <span class="hidden sm:inline">白隊</span>
-              <span class="sm:hidden">白</span>
-              <span id="versus-top-white" class="font-mono text-sm sm:text-lg text-indigo-700">0</span>
-            </div>
-          </div>
-
-          <button type="button" onclick="toggleVoice()" class="px-2 h-8 sm:h-9 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-[11px] sm:text-xs font-bold text-indigo-300 flex items-center justify-center border border-slate-700 transition" title="切換語音播報">
-            <span id="icon-voice-game">🗣️關</span>
-          </button>
-
-          <button type="button" onclick="toggleSound()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white flex items-center justify-center border border-slate-700 transition" title="切換音效">
-            <i id="icon-sound-game" class="fa-solid fa-volume-high text-xs sm:text-sm"></i>
-          </button>
-
-          <button type="button" onclick="toggleFullscreen()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-amber-300 flex items-center justify-center border border-slate-700 transition" title="切換全螢幕">
-            <i id="icon-fullscreen-game" class="fa-solid fa-expand text-xs sm:text-sm"></i>
-          </button>
-        </div>
+    <!-- 頂部狀態與時間倒數列 -->
+    <header class="compact-landscape-header w-full bg-slate-900 text-white px-2.5 sm:px-5 py-2 flex items-center justify-between shadow-md z-20 shrink-0">
+      <div class="flex items-center gap-1.5 sm:gap-2.5">
+        <button type="button" onclick="confirmExitGame()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1 transition active:scale-95">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+          <span class="hidden sm:inline">返回首頁</span>
+        </button>
+        <span id="headerTitleBadge" class="serif-title font-bold text-xs sm:text-base text-amber-300 tracking-wider hidden md:inline">丹青極速決</span>
+        <span id="questionCounterBadge" class="px-2 py-0.5 rounded-full bg-slate-800 text-[11px] font-bold text-slate-300">第 1 題</span>
       </div>
 
-      <!-- 總時間進度條 -->
-      <div class="w-full h-1 sm:h-1.5 bg-slate-800 mt-1.5 rounded-full overflow-hidden">
-        <div id="global-timer-bar" class="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 transition-all duration-300" style="width: 100%;"></div>
+      <!-- 總時間倒數 -->
+      <div class="flex items-center gap-1.5 bg-slate-800/95 px-3 py-1 rounded-xl border border-slate-700">
+        <svg class="w-4 h-4 text-amber-400 animate-spin" style="animation-duration: 8s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span id="globalTimerText" class="font-mono text-base sm:text-xl font-black tracking-wider text-white">01:00</span>
+      </div>
+
+      <!-- 音效與全螢幕按鈕 -->
+      <div class="flex items-center gap-1.5">
+        <div id="soloHeaderScoreBox" class="hidden sm:flex items-center gap-1 bg-indigo-950/90 border border-indigo-700 px-2.5 py-1 rounded-xl">
+          <span class="text-[11px] text-indigo-300">得分</span>
+          <span id="soloHeaderScore" class="font-mono text-base font-black text-amber-300">0</span>
+        </div>
+        <button type="button" id="voiceBtnHeader" onclick="toggleVoiceReadout()" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-400 transition">
+          🗣️關
+        </button>
+        <button type="button" id="muteBtn" onclick="toggleMute()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition" title="切換音效">
+          <svg id="soundOnIcon" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          </svg>
+          <svg id="soundOffIcon" class="w-4 h-4 hidden text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+          </svg>
+        </button>
+        <button type="button" onclick="toggleFullScreen()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition" title="全螢幕">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+        </button>
       </div>
     </header>
 
-    <!-- 2B. 上方共用題目與 3 秒作答倒數動畫區 -->
-    <div class="w-full px-2.5 sm:px-6 pt-1.5 sm:pt-3 z-20 shrink-0 compact-py">
-      <div class="max-w-7xl mx-auto paper-card rounded-2xl sm:rounded-3xl p-2.5 sm:p-4 md:p-5 relative overflow-hidden compact-py">
-        <div class="flex flex-row items-center justify-between gap-2">
-          <!-- 左側提示標籤 -->
-          <div class="flex items-center gap-1.5 min-w-0">
-            <span class="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl bg-slate-900 text-amber-300 font-black text-[11px] sm:text-sm tracking-wide truncate">
-              請問引號中字詞代表的顏色是？
-            </span>
-          </div>
+    <!-- 遊戲總時間進度條 -->
+    <div class="w-full h-1 bg-slate-800 shrink-0">
+      <div id="globalTimeBar" class="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 transition-all duration-300" style="width: 100%;"></div>
+    </div>
 
-          <!-- 3秒倒數顯示器 -->
-          <div class="flex items-center gap-1.5 sm:gap-2.5 bg-slate-100 px-2.5 sm:px-3.5 py-1 rounded-2xl border border-slate-300 shrink-0">
-            <span class="text-[11px] sm:text-xs font-black text-slate-600 hidden xs:inline">作答倒數</span>
-            <div id="question-timer-badge" class="flex items-center gap-1 font-mono font-black text-base sm:text-2xl text-emerald-600">
-              <i class="fa-solid fa-stopwatch text-xs sm:text-base"></i>
-              <span id="question-timer-text">3.0</span>
-              <span class="text-[11px] sm:text-xs font-bold">秒</span>
-            </div>
+    <!-- 上方題目與 3 秒限時倒數區 -->
+    <div class="w-full max-w-6xl mx-auto px-2.5 sm:px-6 pt-2 pb-1 shrink-0">
+      <div class="compact-landscape-qbox bg-white rounded-2xl sm:rounded-3xl shadow-md border border-stone-200/90 px-3.5 py-2 sm:py-3.5 relative overflow-hidden">
+        <div class="flex items-center justify-between gap-2 mb-1">
+          <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-900 text-white">
+            請問引號中字詞代表的顏色是？
+          </span>
+          <div class="flex items-center gap-1 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full">
+            <span class="text-[11px] font-bold text-slate-600 hidden sm:inline">作答倒數</span>
+            <span id="questionTimerNumber" class="font-mono text-sm sm:text-lg font-black text-rose-600">3.0</span>
+            <span class="text-[11px] font-bold text-slate-500">秒</span>
           </div>
         </div>
 
-        <!-- 題目大字區 -->
-        <div class="text-center my-1 sm:my-2.5 compact-my">
-          <div id="question-prompt-display" class="font-serif-tc fluid-question-title font-black text-slate-900 tracking-wider select-none py-0.5">
-            「縹」碧
-          </div>
+        <!-- 題目文字 -->
+        <div id="questionPrompt" class="serif-title question-text-responsive font-black text-center text-slate-900 tracking-wide py-0.5">
+          「縹」碧
         </div>
 
-        <!-- 3秒動態縮減進度條 -->
-        <div class="w-full h-2.5 sm:h-3.5 bg-slate-200 rounded-full overflow-hidden p-0.5 border border-slate-300">
-          <div id="question-timer-bar" class="h-full rounded-full bg-emerald-500 transition-none" style="width: 100%;"></div>
+        <!-- 3秒動態進度條 -->
+        <div class="w-full h-2 sm:h-2.5 bg-stone-200 rounded-full overflow-hidden mt-1.5 p-0.5">
+          <div id="questionTimeBar" class="h-full rounded-full bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-600 transition-none" style="width: 100%;"></div>
         </div>
       </div>
     </div>
 
-    <!-- 2C. 下方作答區 (依模式切換：一人遊戲 或 兩人對戰模式，彈性撐滿剩餘高度不溢出) -->
-    <div class="flex-1 min-h-0 w-full max-w-7xl mx-auto px-2.5 sm:px-6 py-1.5 sm:py-3 flex flex-col justify-center overflow-hidden relative">
-
-      <!-- ==================== 【一人遊戲】作答與回饋區 ==================== -->
-      <div id="arena-single" class="w-full h-full min-h-0 flex flex-col justify-between gap-2 sm:gap-3 relative">
-        <!-- 單人狀態列 (連對/連錯狀態與累積分數) -->
-        <div class="flex items-center justify-between bg-white/90 px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl border border-slate-200 shadow-sm shrink-0">
-          <div class="flex items-center gap-1.5 min-w-0">
-            <span class="text-xs sm:text-sm font-bold text-slate-500 shrink-0 hidden xs:inline">目前狀態：</span>
-            <span id="single-streak-badge" class="px-2.5 sm:px-3 py-0.5 rounded-full text-xs sm:text-sm font-black bg-slate-100 text-slate-700 truncate">
-              準備作答
-            </span>
-          </div>
-          <div class="flex items-center gap-1.5 shrink-0">
-            <span class="text-xs sm:text-sm font-bold text-slate-500">累積總分：</span>
-            <span id="single-score-big" class="font-mono font-black text-lg sm:text-2xl text-indigo-700">0</span>
-            <span class="text-xs text-slate-500 font-bold">分</span>
-          </div>
+    <!-- ==================== 【一人遊戲】作答與回饋區 ==================== -->
+    <div id="soloArena" class="flex-1 w-full max-w-6xl mx-auto px-2.5 sm:px-6 pb-2.5 flex flex-col justify-between gap-2 min-h-0 relative">
+      <!-- 單人連勝與累積分數狀態列 -->
+      <div class="flex items-center justify-between bg-white px-3.5 py-1.5 rounded-xl border border-stone-200 shadow-sm shrink-0">
+        <div class="flex items-center gap-2">
+          <span id="soloStreakBadge" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-stone-100 text-slate-600">
+            準備作答
+          </span>
         </div>
-
-        <!-- 二選一大型觸控色卡區 (明確設定 grid-rows-2 sm:grid-rows-1 確保在手機直向絕不撐破高度) -->
-        <div class="flex-1 min-h-0 grid grid-cols-1 grid-rows-2 sm:grid-cols-2 sm:grid-rows-1 gap-2.5 sm:gap-5">
-          <button type="button" id="single-opt-0" onclick="handleSingleAnswer(0)" class="color-option-card w-full h-full min-h-0 rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center p-3 sm:p-8 shadow-lg border-4">
-            <span class="opt-label fluid-single-opt font-black tracking-widest">淡青色</span>
-          </button>
-
-          <button type="button" id="single-opt-1" onclick="handleSingleAnswer(1)" class="color-option-card w-full h-full min-h-0 rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center p-3 sm:p-8 shadow-lg border-4">
-            <span class="opt-label fluid-single-opt font-black tracking-widest">紅色</span>
-          </button>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-500">累積總分：</span>
+          <span id="soloTotalScore" class="font-mono text-lg sm:text-2xl font-black text-slate-900">0</span>
+          <span class="text-xs font-bold text-slate-500">分</span>
         </div>
+      </div>
 
-        <!-- 單人作答回饋與「下一題」浮動置中顯示區 (永遠顯示於畫面正中下方，絕不被手機邊界裁切) -->
-        <div id="single-feedback-box" class="hidden absolute inset-x-0 bottom-1 sm:bottom-3 z-30 mx-auto max-w-3xl rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border-4 shadow-[0_15px_40px_rgba(0,0,0,0.35)] transition-all">
-          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-            <!-- 左側：答對/答錯圖示與正確選項說明 -->
-            <div class="flex items-center gap-2.5 sm:gap-3.5 text-left w-full sm:w-auto min-w-0">
-              <div id="single-fb-icon" class="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-3xl shrink-0 font-black">
-                ✓
+      <!-- 二選一巨型色卡按鈕 (手機直向2列，平板/電腦橫向2欄) -->
+      <div id="soloOptionsGrid" class="flex-1 grid grid-cols-1 grid-rows-2 sm:grid-cols-2 sm:grid-rows-1 gap-2.5 sm:gap-5 min-h-0">
+        <button type="button" id="soloOpt0" onclick="handleSoloAnswer(0)"
+          class="color-option-btn rounded-2xl sm:rounded-3xl shadow-lg border-4 border-white flex flex-col items-center justify-center p-3 min-h-0">
+          <span id="soloOpt0Text" class="solo-option-text font-black tracking-wider">淡青色</span>
+        </button>
+
+        <button type="button" id="soloOpt1" onclick="handleSoloAnswer(1)"
+          class="color-option-btn rounded-2xl sm:rounded-3xl shadow-lg border-4 border-white flex flex-col items-center justify-center p-3 min-h-0">
+          <span id="soloOpt1Text" class="solo-option-text font-black tracking-wider">紅色</span>
+        </button>
+      </div>
+
+      <!-- 單人回饋與「下一題」實心不透明對話框 (附半透明深色背景遮罩隔絕底部雜訊) -->
+      <div id="soloFeedbackArea" class="hidden absolute inset-0 z-30 feedback-backdrop rounded-2xl sm:rounded-3xl flex items-center justify-center p-3 sm:p-6">
+        <div id="soloFeedbackCard" class="solid-feedback-modal w-full max-w-xl rounded-3xl p-5 sm:p-6 border-4 transition-all flex flex-col justify-between gap-4">
+          <div class="flex items-start gap-3.5">
+            <div id="soloFeedbackIcon" class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-black shrink-0 shadow-md">
+              ✓
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 id="soloFeedbackTitle" class="text-lg sm:text-2xl font-black">答對了！</h3>
+                <span id="soloFeedbackDelta" class="px-3 py-0.5 rounded-full text-sm sm:text-base font-black">+1 分</span>
+                <span id="soloFeedbackTotalPill" class="px-3 py-0.5 rounded-full text-xs sm:text-sm font-bold bg-slate-900 text-white">累積得分：1 分</span>
               </div>
-              <div class="space-y-0.5 sm:space-y-1 min-w-0 flex-1">
-                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                  <h4 id="single-fb-title" class="text-base sm:text-2xl font-black">回答正確！</h4>
-                  <span id="single-fb-delta" class="px-2.5 py-0.5 rounded-full text-xs sm:text-base font-black bg-emerald-600 text-white">+1 分</span>
-                  <span id="single-fb-total" class="text-xs sm:text-sm font-black text-slate-700 bg-white/90 px-2 py-0.5 rounded-lg border border-slate-300">累積得分：1 分</span>
-                </div>
-                <div class="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-700">
-                  <span>正確選項說明：</span>
-                  <span id="single-fb-swatch" class="inline-block w-4 h-4 sm:w-5 sm:h-5 rounded-md border border-slate-400 shadow-sm shrink-0" style="background-color: #80A492;"></span>
-                  <span id="single-fb-correct-text" class="font-black text-slate-900">淡青色（「縹」碧）</span>
-                </div>
+              <!-- 正確選項說明框 (實心底色凸顯) -->
+              <div id="soloFeedbackDesc" class="text-sm sm:text-base font-bold text-slate-800 mt-2.5 bg-stone-100 border border-stone-300 rounded-xl px-3 py-2 flex items-center gap-2 flex-wrap">
+                正確選項：淡青色
               </div>
             </div>
+          </div>
 
-            <!-- 右側：同步出現的「下一題」大按鈕 -->
-            <button type="button" id="btn-single-next" onclick="triggerNextQuestion()" class="w-full sm:w-auto px-7 sm:px-9 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-lg sm:text-xl shadow-lg border-2 border-white active:scale-95 transition flex items-center justify-center gap-2 shrink-0">
-              <span>下一題</span>
-              <i class="fa-solid fa-circle-arrow-right text-xl"></i>
-            </button>
+          <button type="button" id="soloNextBtn" onclick="nextQuestion()"
+            class="w-full py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-lg sm:text-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 shrink-0 border-2 border-white">
+            <span>下一題</span>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 【兩人對戰模式】紅白雙欄作答區 ==================== -->
+    <div id="versusArena" class="hidden flex-1 w-full max-w-7xl mx-auto px-2 sm:px-5 pb-2 grid grid-cols-2 gap-2 sm:gap-5 min-h-0 relative">
+      
+      <!-- 左欄：紅隊 -->
+      <div id="redTeamColumn" class="bg-rose-50/90 border-2 border-rose-300 rounded-2xl sm:rounded-3xl p-2 sm:p-3.5 flex flex-col justify-between relative overflow-hidden shadow-md min-h-0">
+        <!-- 紅隊標頭與計分 -->
+        <div class="flex items-center justify-between border-b border-rose-200 pb-1.5 mb-1.5 shrink-0">
+          <div class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded-full bg-rose-600 animate-pulse"></span>
+            <h2 class="font-black text-sm sm:text-xl text-rose-900">紅隊</h2>
+            <span id="redStreakBadge" class="hidden sm:inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-200/80 text-rose-900">準備</span>
+          </div>
+          <div class="text-right flex items-baseline gap-1">
+            <span class="text-[10px] text-rose-700 font-bold hidden sm:inline">總分</span>
+            <span id="redTotalScore" class="font-mono text-lg sm:text-2xl font-black text-rose-700">0</span>
+          </div>
+        </div>
+
+        <!-- 紅隊二選一選項 -->
+        <div class="flex-1 grid grid-rows-2 gap-2 my-0.5 min-h-0">
+          <button type="button" id="redOpt0"
+            class="color-option-btn rounded-xl sm:rounded-2xl shadow-md border-2 sm:border-4 border-white flex items-center justify-center p-2 min-h-0">
+            <span id="redOpt0Text" class="versus-option-text font-black tracking-wider pointer-events-none">選項A</span>
+          </button>
+          <button type="button" id="redOpt1"
+            class="color-option-btn rounded-xl sm:rounded-2xl shadow-md border-2 sm:border-4 border-white flex items-center justify-center p-2 min-h-0">
+            <span id="redOpt1Text" class="versus-option-text font-black tracking-wider pointer-events-none">選項B</span>
+          </button>
+        </div>
+
+        <!-- 紅隊已作答等待遮罩 (實心不透明卡片配半透明底幕) -->
+        <div id="redLockedOverlay" class="hidden absolute inset-0 feedback-backdrop flex flex-col items-center justify-center z-10 p-3">
+          <div class="solid-feedback-modal px-4 py-3 rounded-2xl text-center border-2 border-rose-400">
+            <div class="text-xl sm:text-2xl mb-0.5">🔒</div>
+            <div class="font-black text-rose-900 text-xs sm:text-base">紅隊已鎖定答案</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">等待開獎...</div>
+          </div>
+        </div>
+
+        <!-- 紅隊單題結果回饋遮罩 (開獎後顯示於紅隊欄內，100%實心不透明底色) -->
+        <div id="redFeedbackBox" class="hidden absolute inset-0 z-20 feedback-backdrop flex items-center justify-center p-2 sm:p-4">
+          <div id="redFeedbackInner" class="solid-feedback-modal w-full rounded-2xl p-3 sm:p-4 border-4 flex flex-col justify-between gap-2">
+            <div>
+              <div class="flex items-center justify-between gap-1 flex-wrap mb-1">
+                <span id="redFeedbackStatus" class="font-black text-sm sm:text-lg">✓ 答對了！</span>
+                <span id="redFeedbackDelta" class="px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black">+1 分</span>
+              </div>
+              <div id="redSpeedBonusBadge" class="hidden mb-1.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[11px] sm:text-xs font-black shadow-sm">
+                ⚡ 最快答對 +3 分！
+              </div>
+              <div id="redFeedbackExplanation" class="text-xs sm:text-sm text-slate-800 font-bold bg-stone-100 border border-stone-300 rounded-xl p-2 mt-1"></div>
+            </div>
+            <div class="text-xs sm:text-sm font-black text-slate-700 border-t border-stone-200 pt-1.5 flex justify-between">
+              <span>紅隊累積得分</span>
+              <span id="redFeedbackTotal" class="font-mono text-sm sm:text-base text-rose-700">0 分</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- ==================== 【兩人對戰模式】紅白雙欄作答區 (支援雙人多點同時觸控) ==================== -->
-      <div id="arena-versus" class="hidden w-full h-full min-h-0 relative grid grid-cols-2 gap-2 sm:gap-5 items-stretch">
-        
-        <!-- 左欄：紅隊 (RED TEAM) -->
-        <div id="red-team-column" class="bg-rose-50/90 border-2 sm:border-4 border-rose-400 rounded-2xl sm:rounded-3xl p-2 sm:p-4 flex flex-col justify-between relative shadow-md overflow-hidden min-h-0">
-          <!-- 紅隊標頭與分數 -->
-          <div class="flex items-center justify-between bg-rose-600 text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-sm shrink-0">
-            <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
-              <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-white text-rose-700 font-black flex items-center justify-center text-xs sm:text-sm shrink-0">紅</span>
-              <div class="min-w-0">
-                <div class="font-black text-xs sm:text-lg leading-none truncate">紅隊</div>
-                <div id="red-streak-text" class="text-[10px] sm:text-xs text-rose-100 font-bold mt-0.5 truncate">準備搶答</div>
-              </div>
-            </div>
-            <div class="text-right shrink-0 ml-1">
-              <div class="text-[9px] sm:text-xs text-rose-100 font-bold hidden xs:block">累積得分</div>
-              <div id="red-score-display" class="font-mono font-black text-lg sm:text-3xl leading-none text-amber-200">0</div>
-            </div>
+      <!-- 右欄：白隊 -->
+      <div id="whiteTeamColumn" class="bg-white border-2 border-slate-300 rounded-2xl sm:rounded-3xl p-2 sm:p-3.5 flex flex-col justify-between relative overflow-hidden shadow-md min-h-0">
+        <!-- 白隊標頭與計分 -->
+        <div class="flex items-center justify-between border-b border-slate-200 pb-1.5 mb-1.5 shrink-0">
+          <div class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded-full bg-slate-500 animate-pulse"></span>
+            <h2 class="font-black text-sm sm:text-xl text-slate-800">白隊</h2>
+            <span id="whiteStreakBadge" class="hidden sm:inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">準備</span>
           </div>
-
-          <!-- 紅隊二選一選項 -->
-          <div class="flex-1 min-h-0 grid grid-rows-2 gap-2 sm:gap-3.5 my-1.5 sm:my-2.5">
-            <button type="button" id="red-opt-0" onpointerdown="handleVersusAnswer('red', 0)" onclick="handleVersusAnswer('red', 0)" class="color-option-card w-full h-full min-h-0 rounded-xl sm:rounded-2xl flex items-center justify-center p-2 sm:p-5 shadow-md border-2 sm:border-4">
-              <span class="opt-label fluid-versus-opt font-black tracking-wider">淡青色</span>
-            </button>
-            <button type="button" id="red-opt-1" onpointerdown="handleVersusAnswer('red', 1)" onclick="handleVersusAnswer('red', 1)" class="color-option-card w-full h-full min-h-0 rounded-xl sm:rounded-2xl flex items-center justify-center p-2 sm:p-5 shadow-md border-2 sm:border-4">
-              <span class="opt-label fluid-versus-opt font-black tracking-wider">紅色</span>
-            </button>
-          </div>
-
-          <!-- 紅隊作答鎖定提示遮罩 (未開獎前顯示) -->
-          <div id="red-lock-banner" class="hidden py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl bg-rose-900/90 text-white text-center font-bold text-[11px] sm:text-sm shrink-0">
-            <i class="fa-solid fa-lock mr-1 text-amber-300"></i>
-            <span id="red-lock-text">已鎖定，等待開獎...</span>
-          </div>
-
-          <!-- 紅隊開獎回饋卡 -->
-          <div id="red-feedback-card" class="hidden rounded-xl sm:rounded-2xl p-2 sm:p-3 border-2 text-left transition-all shrink-0">
-            <div class="flex flex-wrap items-center justify-between gap-1">
-              <div class="flex items-center gap-1 sm:gap-2">
-                <span id="red-fb-badge" class="w-5 h-5 sm:w-7 sm:h-7 rounded-md sm:rounded-lg flex items-center justify-center font-black text-xs sm:text-sm text-white shrink-0">✓</span>
-                <span id="red-fb-status" class="font-black text-xs sm:text-lg">答對了！</span>
-              </div>
-              <div class="flex items-center gap-1">
-                <span id="red-fb-speed" class="hidden px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] sm:text-xs">
-                  ⚡+3
-                </span>
-                <span id="red-fb-delta" class="px-2 py-0.5 rounded-full font-black text-[11px] sm:text-sm">+1 分</span>
-              </div>
-            </div>
-            <div id="red-fb-detail" class="mt-1 text-[11px] sm:text-sm font-bold text-slate-700 flex flex-wrap items-center gap-1 leading-tight">
-              <!-- 正確答案說明與累積得分 -->
-            </div>
+          <div class="text-right flex items-baseline gap-1">
+            <span class="text-[10px] text-slate-500 font-bold hidden sm:inline">總分</span>
+            <span id="whiteTotalScore" class="font-mono text-lg sm:text-2xl font-black text-slate-800">0</span>
           </div>
         </div>
 
-        <!-- 右欄：白隊 (WHITE TEAM) -->
-        <div id="white-team-column" class="bg-white/95 border-2 sm:border-4 border-slate-400 rounded-2xl sm:rounded-3xl p-2 sm:p-4 flex flex-col justify-between relative shadow-md overflow-hidden min-h-0">
-          <!-- 白隊標頭與分數 -->
-          <div class="flex items-center justify-between bg-slate-800 text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-sm shrink-0">
-            <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
-              <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-white text-slate-900 font-black flex items-center justify-center text-xs sm:text-sm shrink-0">白</span>
-              <div class="min-w-0">
-                <div class="font-black text-xs sm:text-lg leading-none truncate">白隊</div>
-                <div id="white-streak-text" class="text-[10px] sm:text-xs text-slate-300 font-bold mt-0.5 truncate">準備搶答</div>
-              </div>
-            </div>
-            <div class="text-right shrink-0 ml-1">
-              <div class="text-[9px] sm:text-xs text-slate-300 font-bold hidden xs:block">累積得分</div>
-              <div id="white-score-display" class="font-mono font-black text-lg sm:text-3xl leading-none text-amber-300">0</div>
-            </div>
-          </div>
-
-          <!-- 白隊二選一選項 (與紅隊完全一致) -->
-          <div class="flex-1 min-h-0 grid grid-rows-2 gap-2 sm:gap-3.5 my-1.5 sm:my-2.5">
-            <button type="button" id="white-opt-0" onpointerdown="handleVersusAnswer('white', 0)" onclick="handleVersusAnswer('white', 0)" class="color-option-card w-full h-full min-h-0 rounded-xl sm:rounded-2xl flex items-center justify-center p-2 sm:p-5 shadow-md border-2 sm:border-4">
-              <span class="opt-label fluid-versus-opt font-black tracking-wider">淡青色</span>
-            </button>
-            <button type="button" id="white-opt-1" onpointerdown="handleVersusAnswer('white', 1)" onclick="handleVersusAnswer('white', 1)" class="color-option-card w-full h-full min-h-0 rounded-xl sm:rounded-2xl flex items-center justify-center p-2 sm:p-5 shadow-md border-2 sm:border-4">
-              <span class="opt-label fluid-versus-opt font-black tracking-wider">紅色</span>
-            </button>
-          </div>
-
-          <!-- 白隊作答鎖定提示遮罩 -->
-          <div id="white-lock-banner" class="hidden py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl bg-slate-800/90 text-white text-center font-bold text-[11px] sm:text-sm shrink-0">
-            <i class="fa-solid fa-lock mr-1 text-amber-300"></i>
-            <span id="white-lock-text">已鎖定，等待開獎...</span>
-          </div>
-
-          <!-- 白隊開獎回饋卡 -->
-          <div id="white-feedback-card" class="hidden rounded-xl sm:rounded-2xl p-2 sm:p-3 border-2 text-left transition-all shrink-0">
-            <div class="flex flex-wrap items-center justify-between gap-1">
-              <div class="flex items-center gap-1 sm:gap-2">
-                <span id="white-fb-badge" class="w-5 h-5 sm:w-7 sm:h-7 rounded-md sm:rounded-lg flex items-center justify-center font-black text-xs sm:text-sm text-white shrink-0">✓</span>
-                <span id="white-fb-status" class="font-black text-xs sm:text-lg">答對了！</span>
-              </div>
-              <div class="flex items-center gap-1">
-                <span id="white-fb-speed" class="hidden px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] sm:text-xs">
-                  ⚡+3
-                </span>
-                <span id="white-fb-delta" class="px-2 py-0.5 rounded-full font-black text-[11px] sm:text-sm">+1 分</span>
-              </div>
-            </div>
-            <div id="white-fb-detail" class="mt-1 text-[11px] sm:text-sm font-bold text-slate-700 flex flex-wrap items-center gap-1 leading-tight">
-              <!-- 正確答案說明與累積得分 -->
-            </div>
-          </div>
-        </div>
-
-        <!-- 兩隊欄位正中間同步出現的「下一題」按鈕 -->
-        <div id="versus-center-next-wrapper" class="hidden absolute inset-0 pointer-events-none flex items-center justify-center z-30">
-          <button type="button" id="btn-versus-next" onclick="triggerNextQuestion()" class="pointer-events-auto animate-fade-in-up px-6 sm:px-10 py-3.5 sm:py-5 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-lg sm:text-2xl shadow-[0_10px_35px_rgba(0,0,0,0.45)] border-4 border-white active:scale-95 transition flex items-center gap-2">
-            <span>下一題</span>
-            <i class="fa-solid fa-circle-arrow-right text-xl sm:text-2xl"></i>
+        <!-- 白隊二選一選項 -->
+        <div class="flex-1 grid grid-rows-2 gap-2 my-0.5 min-h-0">
+          <button type="button" id="whiteOpt0"
+            class="color-option-btn rounded-xl sm:rounded-2xl shadow-md border-2 sm:border-4 border-stone-200 flex items-center justify-center p-2 min-h-0">
+            <span id="whiteOpt0Text" class="versus-option-text font-black tracking-wider pointer-events-none">選項A</span>
+          </button>
+          <button type="button" id="whiteOpt1"
+            class="color-option-btn rounded-xl sm:rounded-2xl shadow-md border-2 sm:border-4 border-stone-200 flex items-center justify-center p-2 min-h-0">
+            <span id="whiteOpt1Text" class="versus-option-text font-black tracking-wider pointer-events-none">選項B</span>
           </button>
         </div>
 
+        <!-- 白隊已作答等待遮罩 (實心不透明卡片配半透明底幕) -->
+        <div id="whiteLockedOverlay" class="hidden absolute inset-0 feedback-backdrop flex flex-col items-center justify-center z-10 p-3">
+          <div class="solid-feedback-modal px-4 py-3 rounded-2xl text-center border-2 border-slate-400">
+            <div class="text-xl sm:text-2xl mb-0.5">🔒</div>
+            <div class="font-black text-slate-800 text-xs sm:text-base">白隊已鎖定答案</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">等待開獎...</div>
+          </div>
+        </div>
+
+        <!-- 白隊單題結果回饋遮罩 (開獎後顯示於白隊欄內，100%實心不透明底色) -->
+        <div id="whiteFeedbackBox" class="hidden absolute inset-0 z-20 feedback-backdrop flex items-center justify-center p-2 sm:p-4">
+          <div id="whiteFeedbackInner" class="solid-feedback-modal w-full rounded-2xl p-3 sm:p-4 border-4 flex flex-col justify-between gap-2">
+            <div>
+              <div class="flex items-center justify-between gap-1 flex-wrap mb-1">
+                <span id="whiteFeedbackStatus" class="font-black text-sm sm:text-lg">✓ 答對了！</span>
+                <span id="whiteFeedbackDelta" class="px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black">+1 分</span>
+              </div>
+              <div id="whiteSpeedBonusBadge" class="hidden mb-1.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[11px] sm:text-xs font-black shadow-sm">
+                ⚡ 最快答對 +3 分！
+              </div>
+              <div id="whiteFeedbackExplanation" class="text-xs sm:text-sm text-slate-800 font-bold bg-stone-100 border border-stone-300 rounded-xl p-2 mt-1"></div>
+            </div>
+            <div class="text-xs sm:text-sm font-black text-slate-700 border-t border-stone-200 pt-1.5 flex justify-between">
+              <span>白隊累積得分</span>
+              <span id="whiteFeedbackTotal" class="font-mono text-sm sm:text-base text-slate-900">0 分</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 兩隊欄位正中央同步出現的「下一題」按鈕 -->
+      <div id="versusCenterNextWrapper" class="hidden absolute left-1/2 bottom-4 sm:bottom-auto sm:top-1/2 -translate-x-1/2 sm:-translate-y-1/2 z-30">
+        <button type="button" id="versusNextBtn" onclick="nextQuestion()"
+          class="px-6 sm:px-9 py-3 sm:py-4 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-base sm:text-xl shadow-[0_12px_35px_rgba(0,0,0,0.45)] border-4 border-white flex items-center gap-2 transition transform active:scale-95">
+          <span>下一題</span>
+          <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </button>
       </div>
     </div>
   </section>
 
-  <!-- ==================== 3. 遊戲時間到結算畫面 (RESULT MODAL) ==================== -->
-  <div id="modal-result" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-40 flex items-center justify-center p-4 overflow-y-auto">
-    <div class="paper-card rounded-3xl max-w-2xl w-full p-6 sm:p-8 text-center relative animate-fade-in-up border-4 border-amber-400/80 my-auto">
-      
-      <!-- 皇冠或獎盃圖示 -->
-      <div id="result-trophy-box" class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl mx-auto flex items-center justify-center text-4xl sm:text-5xl shadow-lg mb-4 bg-gradient-to-br from-amber-300 to-amber-500 text-slate-950">
-        <i class="fa-solid fa-trophy"></i>
+  <!-- ==================== 結算與祝賀畫面 Modal ==================== -->
+  <div id="resultModal" class="hidden fixed inset-0 z-40 bg-slate-950/85 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-7 shadow-2xl border-2 border-stone-200 text-center relative overflow-hidden anim-pop">
+      <div class="text-4xl sm:text-5xl mb-2" id="resultTrophyIcon">🏆</div>
+      <div class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-black tracking-widest mb-1.5" id="resultSubtitle">
+        時間到・挑戰結束
       </div>
-
-      <div class="inline-block px-3.5 py-1 rounded-full bg-amber-100 text-amber-900 font-black text-xs sm:text-sm mb-2">
-        ⏰ 遊戲時間到！最終結算
-      </div>
-
-      <h2 id="result-headline" class="font-serif-tc text-3xl sm:text-5xl font-black text-slate-900 tracking-wide">
-        挑戰完成！
+      <h2 id="resultWinnerTitle" class="serif-title text-2xl sm:text-4xl font-black text-slate-900 mb-4">
+        恭喜完成挑戰！
       </h2>
-      <p id="result-subline" class="text-slate-600 font-bold text-sm sm:text-base mt-1">
-        精彩的漢字色彩極速對決
-      </p>
 
-      <!-- 單人結算面板 -->
-      <div id="result-body-single" class="my-6 grid grid-cols-3 gap-3">
-        <div class="bg-white rounded-2xl p-4 border-2 border-slate-200 shadow-sm">
-          <div class="text-xs font-bold text-slate-500">最終累積總分</div>
-          <div id="res-single-score" class="font-mono font-black text-3xl sm:text-4xl text-indigo-600 mt-1">0</div>
-        </div>
-        <div class="bg-white rounded-2xl p-4 border-2 border-slate-200 shadow-sm">
-          <div class="text-xs font-bold text-slate-500">答對 / 總題數</div>
-          <div id="res-single-accuracy" class="font-mono font-black text-2xl sm:text-3xl text-emerald-600 mt-1">0 / 0</div>
-        </div>
-        <div class="bg-white rounded-2xl p-4 border-2 border-slate-200 shadow-sm">
-          <div class="text-xs font-bold text-slate-500">最高連續答對</div>
-          <div id="res-single-streak" class="font-mono font-black text-2xl sm:text-3xl text-amber-600 mt-1">0 連勝</div>
-        </div>
-      </div>
-
-      <!-- 雙人對戰結算面板 -->
-      <div id="result-body-versus" class="hidden my-6 grid grid-cols-2 gap-4">
-        <!-- 紅隊最終成績 -->
-        <div id="res-card-red" class="rounded-2xl p-4 sm:p-5 border-2 border-rose-400 bg-rose-50/90 text-left relative">
-          <div id="res-winner-tag-red" class="hidden absolute -top-3 right-3 px-3 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-xs shadow">
-            🏆 勝隊 WIN
-          </div>
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-8 h-8 rounded-lg bg-rose-600 text-white font-black flex items-center justify-center">紅</span>
-            <span class="font-black text-lg text-rose-950">紅隊總成績</span>
-          </div>
-          <div class="font-mono font-black text-4xl sm:text-5xl text-rose-600 my-2">
-            <span id="res-red-score">0</span> <span class="text-base font-sans">分</span>
-          </div>
-          <div class="text-xs text-slate-600 font-bold space-y-1">
-            <div>• 答對題數：<span id="res-red-correct" class="text-slate-900">0</span> 題</div>
-            <div>• 最高連對：<span id="res-red-streak" class="text-slate-900">0</span> 題</div>
-            <div>• 最快搶答獎勵：<span id="res-red-fast" class="text-rose-600">0</span> 次 (+3分/次)</div>
-          </div>
-        </div>
-
-        <!-- 白隊最終成績 -->
-        <div id="res-card-white" class="rounded-2xl p-4 sm:p-5 border-2 border-slate-400 bg-white text-left relative">
-          <div id="res-winner-tag-white" class="hidden absolute -top-3 right-3 px-3 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-xs shadow">
-            🏆 勝隊 WIN
-          </div>
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-8 h-8 rounded-lg bg-slate-800 text-white font-black flex items-center justify-center">白</span>
-            <span class="font-black text-lg text-slate-900">白隊總成績</span>
-          </div>
-          <div class="font-mono font-black text-4xl sm:text-5xl text-slate-800 my-2">
-            <span id="res-white-score">0</span> <span class="text-base font-sans">分</span>
-          </div>
-          <div class="text-xs text-slate-600 font-bold space-y-1">
-            <div>• 答對題數：<span id="res-white-correct" class="text-slate-900">0</span> 題</div>
-            <div>• 最高連對：<span id="res-white-streak" class="text-slate-900">0</span> 題</div>
-            <div>• 最快搶答獎勵：<span id="res-white-fast" class="text-indigo-600">0</span> 次 (+3分/次)</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 操作按鈕列 -->
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
-        <button type="button" onclick="startGame()" class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-slate-900 hover:bg-indigo-900 text-white font-black text-lg shadow-lg transition flex items-center justify-center gap-2">
-          <i class="fa-solid fa-rotate-right"></i>
-          <span>再玩一次</span>
-        </button>
-        <button type="button" onclick="returnToHome()" class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-black text-lg transition flex items-center justify-center gap-2">
-          <i class="fa-solid fa-sliders"></i>
-          <span>調整模式與時間</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== 4. 題庫預覽視窗 (QUESTION BANK MODAL) ==================== -->
-  <div id="modal-bank" class="hidden fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-40 flex items-center justify-center p-4">
-    <div class="paper-card rounded-3xl max-w-4xl w-full max-h-[88vh] flex flex-col p-5 sm:p-7 border-2 border-slate-300 animate-fade-in-up">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+      <!-- 單人結算統計 -->
+      <div id="soloResultStats" class="bg-stone-50 rounded-2xl p-4 border border-stone-200 mb-5 grid grid-cols-3 gap-2">
         <div>
-          <h3 class="font-serif-tc text-xl sm:text-2xl font-black text-slate-900">
-            📖 內建《顏色題庫》一覽表（共 18 題・4 大分組）
-          </h3>
-          <p class="text-xs sm:text-sm text-slate-600 mt-0.5">
-            系統出題時，錯誤選項必定隨機挑選自「不同答案分組」的顏色，確保鑑別度與公平性。
-          </p>
+          <div class="text-xs text-slate-500 font-bold">最終總分</div>
+          <div id="finalSoloScore" class="font-mono text-2xl sm:text-3xl font-black text-rose-600 mt-1">0</div>
         </div>
-        <button type="button" id="btn-close-bank" class="w-9 h-9 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold flex items-center justify-center">
-          <i class="fa-solid fa-xmark text-lg"></i>
+        <div class="border-x border-stone-200">
+          <div class="text-xs text-slate-500 font-bold">答對 / 總題數</div>
+          <div id="finalSoloAccuracy" class="font-mono text-lg sm:text-xl font-black text-slate-800 mt-1.5">0 / 0</div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-500 font-bold">最高連對</div>
+          <div id="finalSoloMaxStreak" class="font-mono text-2xl sm:text-3xl font-black text-emerald-600 mt-1">0</div>
+        </div>
+      </div>
+
+      <!-- 雙人對戰結算統計 -->
+      <div id="versusResultStats" class="hidden grid-cols-2 gap-3 mb-5">
+        <div id="finalRedCard" class="rounded-2xl p-3.5 border-2 border-rose-200 bg-rose-50/70 flex flex-col items-center">
+          <span id="finalRedCrown" class="hidden text-xs font-black px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 mb-1">👑 勝隊</span>
+          <div class="font-black text-rose-900 text-base">紅隊</div>
+          <div id="finalRedScore" class="font-mono text-3xl font-black text-rose-600 my-1">0</div>
+          <div id="finalRedDetail" class="text-xs text-rose-700 font-medium">答對 0 題｜最高連對 0</div>
+        </div>
+        <div id="finalWhiteCard" class="rounded-2xl p-3.5 border-2 border-slate-200 bg-slate-50 flex flex-col items-center">
+          <span id="finalWhiteCrown" class="hidden text-xs font-black px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 mb-1">👑 勝隊</span>
+          <div class="font-black text-slate-800 text-base">白隊</div>
+          <div id="finalWhiteScore" class="font-mono text-3xl font-black text-slate-800 my-1">0</div>
+          <div id="finalWhiteDetail" class="text-xs text-slate-600 font-medium">答對 0 題｜最高連對 0</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <button type="button" onclick="returnToHome()"
+          class="py-3 rounded-2xl border-2 border-stone-300 hover:bg-stone-100 text-slate-700 font-black text-sm sm:text-base transition active:scale-95">
+          返回設定首頁
         </button>
-      </div>
-
-      <div class="flex-1 overflow-y-auto my-4 pr-1">
-        <div id="bank-grid-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-          <!-- JS 動態渲染 18 筆題庫卡片 -->
-        </div>
-      </div>
-
-      <div class="pt-3 border-t border-slate-200 flex justify-end">
-        <button type="button" onclick="toggleBankModal(false)" class="px-6 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm">
-          關閉視窗
+        <button type="button" onclick="replayGame()"
+          class="py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-sm sm:text-base shadow-lg transition active:scale-95">
+          再玩一局 ↻
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== JAVASCRIPT 遊戲核心邏輯 ==================== -->
   <script>
-    /**************************************************************
-     * 1. 題庫資料（完整來自附檔「顏色題庫.csv」18筆資料）
-     **************************************************************/
+    // ==================== 0. 動態視窗高度與全螢幕支援 ====================
+    function updateAppHeight() {
+      document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+    }
+    window.addEventListener('resize', updateAppHeight);
+    window.addEventListener('orientationchange', () => setTimeout(updateAppHeight, 150));
+    updateAppHeight();
+
+    function toggleFullScreen() {
+      unlockAndInitAudio();
+      playSoundEffect('click');
+      const doc = window.document;
+      const docEl = doc.documentElement;
+      const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+      const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+      if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+        if (requestFullScreen) requestFullScreen.call(docEl).catch(() => {});
+      } else {
+        if (cancelFullScreen) cancelFullScreen.call(doc).catch(() => {});
+      }
+    }
+
+    // ==================== 1. 題庫資料 (完整對應附檔 顏色題庫.csv) ====================
     const QUESTION_BANK = [
-      { id: 1, question: "「縹」碧", answerText: "淡青色", bgColor: "#80A492", group: "A" },
-      { id: 2, question: "「蒼」松", answerText: "深青色", bgColor: "#134857", group: "A" },
-      { id: 3, question: "「碧」波盪漾", answerText: "青綠色", bgColor: "#2ACD96", group: "A" },
-      { id: 4, question: "「翠」柏", answerText: "青綠色", bgColor: "#2ACD96", group: "A" },
-      { id: 5, question: "青的「靛」青", answerText: "藍色", bgColor: "#1661AB", group: "A" },
-      { id: 6, question: "「丹」楓", answerText: "紅色", bgColor: "#C13221", group: "B" },
-      { id: 7, question: "「朱」墨爛然", answerText: "紅色", bgColor: "#E34234", group: "B" },
-      { id: 8, question: "近朱者「赤」", answerText: "紅色", bgColor: "#FF0000", group: "B" },
-      { id: 9, question: "面紅耳「赤」", answerText: "紅色", bgColor: "#FF0000", group: "B" },
-      { id: 10, question: "「緋」桃", answerText: "紅色", bgColor: "#DC143C", group: "B" },
-      { id: 11, question: "玉貌「絳」脣", answerText: "紅色", bgColor: "#FF2121", group: "B" },
-      { id: 12, question: "「黛」青", answerText: "青黑色", bgColor: "#4A4F55", group: "C" },
-      { id: 13, question: "「黝」黑", answerText: "青黑色", bgColor: "#6B6882", group: "C" },
-      { id: 14, question: "「素」帳", answerText: "白色", bgColor: "#FFFFFF", group: "D" },
-      { id: 15, question: "「縞」巾", answerText: "白色", bgColor: "#FFFFFF", group: "D" },
-      { id: 16, question: "「烏」雲", answerText: "黑色", bgColor: "#000000", group: "C" },
-      { id: 17, question: "青紅「皂」白", answerText: "黑色", bgColor: "#000000", group: "C" },
-      { id: 18, question: "「墨」鏡", answerText: "黑色", bgColor: "#000000", group: "C" }
+      { id: 0,  prompt: "「縹」碧",   answerText: "淡青色", bgColor: "#80A492", group: "A" },
+      { id: 1,  prompt: "「蒼」松",   answerText: "深青色", bgColor: "#134857", group: "A" },
+      { id: 2,  prompt: "「碧」波盪漾", answerText: "青綠色", bgColor: "#2ACD96", group: "A" },
+      { id: 3,  prompt: "「翠」柏",   answerText: "青綠色", bgColor: "#2ACD96", group: "A" },
+      { id: 4,  prompt: "青出於藍而勝於藍的「靛」青", answerText: "藍色", bgColor: "#1661AB", group: "A" },
+      { id: 5,  prompt: "「丹」楓",   answerText: "紅色",   bgColor: "#C13221", group: "B" },
+      { id: 6,  prompt: "「朱」墨爛然", answerText: "紅色",   bgColor: "#E34234", group: "B" },
+      { id: 7,  prompt: "近朱者「赤」", answerText: "紅色",   bgColor: "#FF0000", group: "B" },
+      { id: 8,  prompt: "面紅耳「赤」", answerText: "紅色",   bgColor: "#FF0000", group: "B" },
+      { id: 9,  prompt: "「緋」桃",   answerText: "紅色",   bgColor: "#DC143C", group: "B" },
+      { id: 10, prompt: "玉貌「絳」脣", answerText: "紅色",   bgColor: "#FF2121", group: "B" },
+      { id: 11, prompt: "「黛」青",   answerText: "青黑色", bgColor: "#4A4F55", group: "C" },
+      { id: 12, prompt: "「黝」黑",   answerText: "青黑色", bgColor: "#6B6882", group: "C" },
+      { id: 13, prompt: "「素」帳",   answerText: "白色",   bgColor: "#FFFFFF", group: "D" },
+      { id: 14, prompt: "「縞」巾",   answerText: "白色",   bgColor: "#FFFFFF", group: "D" },
+      { id: 15, prompt: "「烏」雲",   answerText: "黑色",   bgColor: "#000000", group: "C" },
+      { id: 16, prompt: "青紅「皂」白", answerText: "黑色",   bgColor: "#000000", group: "C" },
+      { id: 17, prompt: "「墨」鏡",   answerText: "黑色",   bgColor: "#000000", group: "C" }
     ];
 
-    /**************************************************************
-     * 2. 三重保險音效系統：
-     *    [引擎一] 預建立可重用 16-bit 44100Hz PCM WAV 音訊池 (不重複 new Audio，防止手機卡頓)
-     *    [引擎二] 安全防錯版 Web Audio API 合成器
-     *    [引擎三] 可開關式 Web Speech API 語音播報輔助 (預設關閉，避免手機語音引擎阻塞畫面)
-     **************************************************************/
-    let soundEnabled = true;
-    let voiceEnabled = false;
-    let masterVolume = 1.0;
+    // ==================== 2. 穩定型單例音訊池 (WAV + WebAudio) ====================
+    let soundMuted = false;
+    let voiceReadoutEnabled = false;
+    let masterVolume = 0.9;
     let audioCtx = null;
-    let eqTimeoutId = null;
-    const wavUrls = {};
     const audioPool = {};
+    let audioUnlocked = false;
 
-    // 即時同步手機真實可視高度，避免手機瀏覽器上下工具列裁切按鈕
-    function syncMobileViewportHeight() {
-      const vh = window.innerHeight;
-      document.documentElement.style.setProperty('--app-height', `${vh}px`);
-    }
-    syncMobileViewportHeight();
-    window.addEventListener('resize', syncMobileViewportHeight);
-    window.addEventListener('orientationchange', () => {
-      setTimeout(syncMobileViewportHeight, 120);
-    });
+    function generateWavDataUri(notes, sampleRate = 22050) {
+      let totalSamples = 0;
+      notes.forEach(n => {
+        const startSample = Math.floor((n.delay || 0) * sampleRate);
+        const endSample = startSample + Math.floor(n.dur * sampleRate);
+        if (endSample > totalSamples) totalSamples = endSample;
+      });
+      totalSamples += Math.floor(0.03 * sampleRate);
 
-    // 將浮點數樣本陣列 (-1.0 ~ 1.0) 封裝成標準 16-bit 44100Hz Mono WAV Blob URL
-    function createWavBlobUrl(samplesFloat32, sampleRate = 44100) {
-      const numSamples = samplesFloat32.length;
-      const buffer = new ArrayBuffer(44 + numSamples * 2);
+      const buffer = new ArrayBuffer(44 + totalSamples * 2);
       const view = new DataView(buffer);
 
-      function writeAscii(offset, str) {
-        for (let i = 0; i < str.length; i++) {
-          view.setUint8(offset + i, str.charCodeAt(i));
-        }
+      function writeStr(offset, str) {
+        for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
       }
 
-      writeAscii(0, 'RIFF');
-      view.setUint32(4, 36 + numSamples * 2, true);
-      writeAscii(8, 'WAVE');
-      writeAscii(12, 'fmt ');
-      view.setUint32(16, 16, true);           // Subchunk1Size (PCM = 16)
-      view.setUint16(20, 1, true);            // AudioFormat (PCM = 1)
-      view.setUint16(22, 1, true);            // NumChannels (Mono = 1)
-      view.setUint32(24, sampleRate, true);   // SampleRate
-      view.setUint32(28, sampleRate * 2, true); // ByteRate
-      view.setUint16(32, 2, true);            // BlockAlign
-      view.setUint16(34, 16, true);           // BitsPerSample
-      writeAscii(36, 'data');
-      view.setUint32(40, numSamples * 2, true);
+      writeStr(0, 'RIFF');
+      view.setUint32(4, 36 + totalSamples * 2, true);
+      writeStr(8, 'WAVE');
+      writeStr(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeStr(36, 'data');
+      view.setUint32(40, totalSamples * 2, true);
 
-      let offset = 44;
-      for (let i = 0; i < numSamples; i++) {
-        const clamped = Math.max(-1, Math.min(1, samplesFloat32[i]));
-        view.setInt16(offset, clamped < 0 ? clamped * 0x8000 : clamped * 0x7FFF, true);
-        offset += 2;
-      }
+      const floatSamples = new Float32Array(totalSamples);
 
-      const blob = new Blob([buffer], { type: 'audio/wav' });
-      return URL.createObjectURL(blob);
-    }
+      notes.forEach(n => {
+        const startIdx = Math.floor((n.delay || 0) * sampleRate);
+        const len = Math.floor(n.dur * sampleRate);
+        const f0 = n.freq;
+        const f1 = n.endFreq || f0;
+        const vol = n.vol !== undefined ? n.vol : 0.65;
+        const type = n.type || 'sine';
 
-    // 預先合成 9 款響亮清晰的實體 WAV 音效
-    function initPcmWavBank() {
-      const sr = 44100;
-
-      // (1) click: 800Hz -> 1200Hz 清脆短促按鍵音 (0.08s)
-      {
-        const dur = 0.08;
-        const len = Math.floor(sr * dur);
-        const data = new Float32Array(len);
         let phase = 0;
-        for (let i = 0; i < len; i++) {
-          const t = i / sr;
-          const freq = 800 + (400 * (t / dur));
-          phase += (2 * Math.PI * freq) / sr;
-          const env = Math.pow(1 - t / dur, 1.8);
-          data[i] = Math.sin(phase) * 0.8 * env;
-        }
-        wavUrls.click = createWavBlobUrl(data, sr);
-      }
+        for (let i = 0; i < len && (startIdx + i) < totalSamples; i++) {
+          const progress = i / len;
+          const currentFreq = f0 + (f1 - f0) * progress;
+          phase += (2 * Math.PI * currentFreq) / sampleRate;
 
-      // (2) start: 上行大三和弦琶音 C5-E5-G5-C6 (0.48s)
-      {
-        const dur = 0.48;
-        const len = Math.floor(sr * dur);
-        const data = new Float32Array(len);
-        const notes = [523.25, 659.25, 783.99, 1046.50];
-        for (let i = 0; i < len; i++) {
-          const t = i / sr;
-          const idx = Math.min(3, Math.floor(t / 0.11));
-          const localT = t - idx * 0.11;
-          const localDur = idx === 3 ? 0.15 : 0.11;
-          const freq = notes[idx];
-          const env = Math.max(0, 1 - localT / localDur);
-          const wave = Math.sin(2 * Math.PI * freq * t) * 0.65 + Math.sin(2 * Math.PI * freq * 2 * t) * 0.25;
-          data[i] = wave * env * 0.9;
-        }
-        wavUrls.start = createWavBlobUrl(data, sr);
-      }
-
-      // (3) tick: 1000Hz 倒數滴答聲 (0.06s)
-      {
-        const dur = 0.06;
-        const len = Math.floor(sr * dur);
-        const data = new Float32Array(len);
-        for (let i = 0; i < len; i++) {
-          const t = i / sr;
-          const env = Math.pow(1 - t / dur, 2);
-          data[i] = Math.sin(2 * Math.PI * 1000 * t) * 0.75 * env;
-        }
-        wavUrls.tick = createWavBlobUrl(data, sr);
-      }
-
-      // (4) tickUrgent: 最後1秒急促高音滴答 1500Hz (0.08s)
-      {
-        const dur = 0.08;
-        const len = Math.floor(sr * dur);
-        const data = new Float32Array(len);
-        for (let i = 0; i < len; i++) {
-          const t = i / sr;
-          const env = Math.pow(1 - t / dur, 1.6);
-          const wave = Math.sin(2 * Math.PI * 1500 * t) * 0.7 + Math.sin(2 * Math.PI * 2250 * t) * 0.25;
-          data[i] = wave * 0.85 * env;
-        }
-        wavUrls.tickUrgent = createWavBlobUrl(data, sr);
-      }
-
-      // (5) lockRed & lockWhite: 紅白隊鎖定清脆音 (0.10s)
-      [
-        { key: 'lockRed', baseFreq: 660 },
-        { key: 'lockWhite', baseFreq: 880 }
-      ].forEach(cfg => {
-        const dur = 0.10;
-        const len = Math.floor(sr * dur);
-        const data = new Float32Array(len);
-        let phase = 0;
-        for (let i = 0; i < len; i++) {
-          const t = i / sr;
-          const f = cfg.baseFreq * (1 + 0.25 * (t / dur));
-          phase += (2 * Math.PI * f) / sr;
-          const env = Math.pow(1 - t / dur, 1.5);
-          data[i] = Math.sin(phase) * 0.82 * env;
-        }
-        wavUrls[cfg.key] = createWavBlobUrl(data, sr);
-      });
-
-      // (6) correct: 響亮歡快的雙音叮咚和弦 (C5+E5 -> G5+C6, 0.42s, 振幅 0.88)
-      {
-        const dur = 0.42;
-        const len = Math.floor(sr * dur);
-        const data = new Float32Array(len);
-        for (let i = 0; i < len; i++) {
-          const t = i / sr;
-          let sample = 0;
-          if (t < 0.13) {
-            const env = Math.pow(1 - t / 0.13, 1.2);
-            sample = (Math.sin(2 * Math.PI * 523.25 * t) * 0.55 + Math.sin(2 * Math.PI * 659.25 * t) * 0.45) * env;
+          let env = 1;
+          const attackSamples = Math.min(Math.floor(0.006 * sampleRate), len * 0.2);
+          if (i < attackSamples) {
+            env = i / attackSamples;
           } else {
-            const localT = t - 0.13;
-            const localDur = dur - 0.13;
-            const env = Math.pow(1 - localT / localDur, 1.3);
-            sample = (
-              Math.sin(2 * Math.PI * 783.99 * t) * 0.45 +
-              Math.sin(2 * Math.PI * 1046.50 * t) * 0.45 +
-              Math.sin(2 * Math.PI * 1567.98 * t) * 0.20
-            ) * env;
+            env = Math.pow(1 - ((i - attackSamples) / (len - attackSamples)), 1.4);
           }
-          data[i] = sample * 0.88;
-        }
-        wavUrls.correct = createWavBlobUrl(data, sr);
-      }
 
-      // (7) fastest: 搶答成功閃亮高音琶音 (0.36s)
-      {
-        const dur = 0.36;
-        const len = Math.floor(sr * dur);
-        const data = new Float32Array(len);
-        const notes = [1318.51, 1567.98, 2093.00];
-        for (let i = 0; i < len; i++) {
-          const t = i / sr;
-          const idx = Math.min(2, Math.floor(t / 0.12));
-          const localT = t - idx * 0.12;
-          const env = Math.pow(1 - localT / 0.12, 1.4);
-          data[i] = Math.sin(2 * Math.PI * notes[idx] * t) * 0.82 * env;
-        }
-        wavUrls.fastest = createWavBlobUrl(data, sr);
-      }
-
-      // (8) wrong: 明顯的低音雙段嗡嗡警示音 (220Hz -> 150Hz 方波/鋸齒波混合, 0.45s, 振幅 0.85)
-      {
-        const dur = 0.45;
-        const len = Math.floor(sr * dur);
-        const data = new Float32Array(len);
-        let phase = 0;
-        for (let i = 0; i < len; i++) {
-          const t = i / sr;
-          const isFirst = t < 0.18;
-          const localT = isFirst ? t : t - 0.18;
-          const localDur = isFirst ? 0.18 : 0.27;
-          const freq = isFirst ? 220 - 30 * (localT / localDur) : 155 - 35 * (localT / localDur);
-          phase += (2 * Math.PI * freq) / sr;
-
-          // 柔和方波 + 泛音，在各種喇叭都非常響亮清楚
-          const sq = Math.sin(phase) >= 0 ? 0.6 : -0.6;
-          const harm = Math.sin(phase * 2) * 0.3 + Math.sin(phase * 3) * 0.15;
-          const env = Math.pow(1 - localT / localDur, 0.9);
-          data[i] = (sq + harm) * env * 0.85;
-        }
-        wavUrls.wrong = createWavBlobUrl(data, sr);
-      }
-
-      // (9) victory: 勝利號角旋律 (C5-E5-G5-C6 輝煌長和弦, 0.92s)
-      {
-        const dur = 0.92;
-        const len = Math.floor(sr * dur);
-        const data = new Float32Array(len);
-        const seq = [
-          { start: 0.00, end: 0.13, f: 523.25 },
-          { start: 0.13, end: 0.26, f: 659.25 },
-          { start: 0.26, end: 0.40, f: 783.99 },
-          { start: 0.40, end: 0.92, f: 1046.50, chord: true }
-        ];
-        for (let i = 0; i < len; i++) {
-          const t = i / sr;
-          const seg = seq.find(s => t >= s.start && t <= s.end) || seq[3];
-          const segDur = seg.end - seg.start;
-          const localT = t - seg.start;
-          const env = Math.pow(Math.max(0, 1 - localT / segDur), 1.1);
-          let wave = Math.sin(2 * Math.PI * seg.f * t) * 0.6 + Math.sin(2 * Math.PI * seg.f * 0.5 * t) * 0.3;
-          if (seg.chord) {
-            wave = (
-              Math.sin(2 * Math.PI * 523.25 * t) * 0.30 +
-              Math.sin(2 * Math.PI * 659.25 * t) * 0.30 +
-              Math.sin(2 * Math.PI * 783.99 * t) * 0.30 +
-              Math.sin(2 * Math.PI * 1046.50 * t) * 0.40
-            );
+          let raw = 0;
+          if (type === 'square') {
+            raw = Math.sin(phase) >= 0 ? 0.8 : -0.8;
+          } else if (type === 'saw') {
+            raw = 2 * ((phase / (2 * Math.PI)) - Math.floor(0.5 + phase / (2 * Math.PI)));
+          } else if (type === 'triangle') {
+            raw = (2 / Math.PI) * Math.asin(Math.sin(phase));
+          } else {
+            raw = Math.sin(phase) + 0.25 * Math.sin(phase * 2);
           }
-          data[i] = wave * env * 0.88;
+
+          floatSamples[startIdx + i] += raw * env * vol;
         }
-        wavUrls.victory = createWavBlobUrl(data, sr);
+      });
+
+      for (let i = 0; i < totalSamples; i++) {
+        const s = Math.max(-0.98, Math.min(0.98, floatSamples[i]));
+        view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
       }
 
-      // 預先建立單例 Audio 元素池，避免在手機上頻繁 new Audio() 造成硬體解碼器上限卡死
-      Object.keys(wavUrls).forEach(key => {
-        try {
-          const a = new Audio(wavUrls[key]);
-          a.preload = 'auto';
-          audioPool[key] = a;
-        } catch (e) {}
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+      }
+      return 'data:audio/wav;base64,' + btoa(binary);
+    }
+
+    function initSoundEffects() {
+      const soundDefs = {
+        click: generateWavDataUri([
+          { freq: 660, endFreq: 880, dur: 0.055, delay: 0, vol: 0.6, type: 'triangle' }
+        ]),
+        start: generateWavDataUri([
+          { freq: 523.25, dur: 0.11, delay: 0.00, vol: 0.65, type: 'triangle' },
+          { freq: 659.25, dur: 0.11, delay: 0.08, vol: 0.65, type: 'triangle' },
+          { freq: 783.99, dur: 0.11, delay: 0.16, vol: 0.65, type: 'triangle' },
+          { freq: 1046.50, dur: 0.26, delay: 0.24, vol: 0.80, type: 'sine' }
+        ]),
+        tick: generateWavDataUri([
+          { freq: 800, dur: 0.04, delay: 0, vol: 0.4, type: 'triangle' }
+        ]),
+        tickUrgent: generateWavDataUri([
+          { freq: 1200, dur: 0.06, delay: 0, vol: 0.6, type: 'square' }
+        ]),
+        lockRed: generateWavDataUri([
+          { freq: 587.33, endFreq: 740, dur: 0.08, delay: 0, vol: 0.65, type: 'triangle' }
+        ]),
+        lockWhite: generateWavDataUri([
+          { freq: 698.46, endFreq: 880, dur: 0.08, delay: 0, vol: 0.65, type: 'triangle' }
+        ]),
+        correct: generateWavDataUri([
+          { freq: 523.25, dur: 0.12, delay: 0.00, vol: 0.75, type: 'triangle' },
+          { freq: 659.25, dur: 0.12, delay: 0.07, vol: 0.75, type: 'triangle' },
+          { freq: 1046.50, dur: 0.28, delay: 0.14, vol: 0.85, type: 'sine' }
+        ]),
+        correctSpeed: generateWavDataUri([
+          { freq: 587.33, dur: 0.10, delay: 0.00, vol: 0.75, type: 'triangle' },
+          { freq: 880.00, dur: 0.10, delay: 0.06, vol: 0.75, type: 'triangle' },
+          { freq: 1174.66, dur: 0.12, delay: 0.12, vol: 0.80, type: 'sine' },
+          { freq: 1567.98, dur: 0.30, delay: 0.18, vol: 0.90, type: 'sine' }
+        ]),
+        wrong: generateWavDataUri([
+          { freq: 300, endFreq: 210, dur: 0.16, delay: 0.00, vol: 0.75, type: 'saw' },
+          { freq: 210, endFreq: 135, dur: 0.28, delay: 0.14, vol: 0.85, type: 'saw' }
+        ]),
+        victory: generateWavDataUri([
+          { freq: 523.25, dur: 0.13, delay: 0.00, vol: 0.75, type: 'triangle' },
+          { freq: 659.25, dur: 0.13, delay: 0.11, vol: 0.75, type: 'triangle' },
+          { freq: 783.99, dur: 0.13, delay: 0.22, vol: 0.75, type: 'triangle' },
+          { freq: 1046.50, dur: 0.42, delay: 0.33, vol: 0.90, type: 'sine' }
+        ])
+      };
+
+      Object.keys(soundDefs).forEach(key => {
+        const a = new Audio(soundDefs[key]);
+        a.preload = 'auto';
+        audioPool[key] = a;
       });
     }
+    initSoundEffects();
 
-    // 觸發視覺音浪跳動與狀態提示
-    function triggerEqVisual(label) {
-      const eqEl = document.getElementById('sound-eq-visualizer');
-      const statusTextEl = document.getElementById('audio-last-triggered');
-      if (eqEl) {
-        eqEl.classList.add('eq-active');
-        if (eqTimeoutId) clearTimeout(eqTimeoutId);
-        eqTimeoutId = setTimeout(() => {
-          eqEl.classList.remove('eq-active');
-        }, 550);
-      }
-      if (statusTextEl && label) {
-        statusTextEl.textContent = `🎵 剛剛觸發音效：${label}（音量 ${Math.round(masterVolume * 100)}%）`;
-      }
-    }
-
-    // 播放實體 WAV `<audio>` 通道 (重用音訊池，零記憶體洩漏與手機卡頓)
-    function playWavChannel(name, volumeMultiplier = 1.0) {
-      if (!soundEnabled || masterVolume <= 0) return;
+    function unlockAndInitAudio() {
       try {
-        const audio = audioPool[name];
-        if (!audio) return;
-        audio.volume = Math.max(0, Math.min(1, masterVolume * volumeMultiplier));
-        audio.currentTime = 0;
-        const playPromise = audio.play();
-        if (playPromise && typeof playPromise.catch === 'function') {
-          playPromise.catch(() => {});
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          if (!audioCtx) audioCtx = new AudioContextClass();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
         }
       } catch (e) {}
+
+      if (!audioUnlocked && audioPool.click) {
+        audioUnlocked = true;
+        const badge = document.getElementById('audioStatusBadge');
+        if (badge) {
+          badge.textContent = '✓ 音效已就緒';
+          badge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900';
+        }
+      }
     }
 
-    // 解鎖並取得安全版 Web Audio API Context
-    function unlockWebAudio() {
-      try {
-        if (!audioCtx) {
-          const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          if (AudioCtx) {
-            audioCtx = new AudioCtx();
-          }
-        }
-        if (audioCtx && audioCtx.state === 'suspended') {
-          audioCtx.resume().catch(() => {});
-        }
-      } catch (e) {}
+    function flashSoundWaveUI() {
+      const waveBars = document.getElementById('waveBars');
+      if (!waveBars) return;
+      waveBars.style.opacity = '1';
+      Array.from(waveBars.children).forEach((bar, i) => {
+        bar.classList.add('wave-bar');
+        bar.style.animationDelay = `${i * 0.1}s`;
+      });
+      clearTimeout(window._waveTimeout);
+      window._waveTimeout = setTimeout(() => {
+        if (!waveBars) return;
+        waveBars.style.opacity = '0.45';
+        Array.from(waveBars.children).forEach(bar => bar.classList.remove('wave-bar'));
+      }, 450);
     }
 
-    // 綁定全域互動自動解鎖音效
-    ['pointerdown', 'touchstart', 'click', 'keydown'].forEach(evtName => {
-      document.addEventListener(evtName, unlockWebAudio, { passive: true });
-    });
-
-    // 安全防錯版 Web Audio 單音合成器（嚴格禁止在 exponentialRamp 傳入 0，一律使用 linearRampToValueAtTime(0.001)）
-    function playSafeWebAudioTone({ freq = 440, endFreq = null, type = 'triangle', delay = 0, duration = 0.15, gainVal = 0.35 }) {
-      if (!soundEnabled || masterVolume <= 0) return;
+    function playSafeWebAudioTone(name) {
+      if (!audioCtx) return;
       try {
-        unlockWebAudio();
-        if (!audioCtx) return;
-
-        const now = audioCtx.currentTime + delay;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-
-        osc.type = type;
-        osc.frequency.setValueAtTime(Math.max(20, freq), now);
-        if (endFreq !== null) {
-          osc.frequency.linearRampToValueAtTime(Math.max(20, endFreq), now + duration);
-        }
-
-        const peak = Math.max(0.002, gainVal * masterVolume);
-        gain.gain.setValueAtTime(0.001, now);
-        gain.gain.linearRampToValueAtTime(peak, now + 0.012);
-        gain.gain.linearRampToValueAtTime(0.001, now + duration);
-
         osc.connect(gain);
         gain.connect(audioCtx.destination);
 
-        osc.start(now);
-        osc.stop(now + duration + 0.02);
+        const v = Math.max(0.05, masterVolume * 0.45);
+        if (name === 'correct' || name === 'correctSpeed') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.07);
+          osc.frequency.setValueAtTime(1046.5, now + 0.14);
+          gain.gain.setValueAtTime(v, now);
+          gain.gain.linearRampToValueAtTime(0.001, now + 0.36);
+          osc.start(now);
+          osc.stop(now + 0.37);
+        } else if (name === 'wrong') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(280, now);
+          osc.frequency.linearRampToValueAtTime(140, now + 0.32);
+          gain.gain.setValueAtTime(v, now);
+          gain.gain.linearRampToValueAtTime(0.001, now + 0.34);
+          osc.start(now);
+          osc.stop(now + 0.35);
+        } else if (name === 'click' || name === 'lockRed' || name === 'lockWhite') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(name === 'lockWhite' ? 760 : 620, now);
+          gain.gain.setValueAtTime(v * 0.7, now);
+          gain.gain.linearRampToValueAtTime(0.001, now + 0.06);
+          osc.start(now);
+          osc.stop(now + 0.07);
+        }
       } catch (e) {}
     }
 
-    // 引擎三：Web Speech API 語音播報輔助 (非同步執行，絕不阻塞手機主執行緒)
-    function speakPrompt(text) {
-      if (!soundEnabled || !voiceEnabled || masterVolume <= 0) return;
+    function playSoundEffect(name) {
+      if (soundMuted) return;
+      unlockAndInitAudio();
+      flashSoundWaveUI();
+
+      const a = audioPool[name];
+      if (a) {
+        try {
+          a.volume = Math.max(0, Math.min(1, masterVolume));
+          a.currentTime = 0;
+          const p = a.play();
+          if (p !== undefined) p.catch(() => {});
+        } catch (err) {}
+      }
+      playSafeWebAudioTone(name);
+    }
+
+    function speakText(text) {
+      if (soundMuted || !voiceReadoutEnabled) return;
+      if (!('speechSynthesis' in window)) return;
       setTimeout(() => {
         try {
-          if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utter = new SpeechSynthesisUtterance(text);
-            utter.lang = 'zh-TW';
-            utter.rate = 1.35;
-            utter.pitch = 1.05;
-            utter.volume = Math.max(0, Math.min(1, masterVolume));
-            window.speechSynthesis.speak(utter);
-          }
+          window.speechSynthesis.cancel();
+          const utter = new SpeechSynthesisUtterance(text);
+          utter.lang = 'zh-TW';
+          utter.rate = 1.35;
+          utter.volume = Math.max(0.2, Math.min(1, masterVolume));
+          window.speechSynthesis.speak(utter);
         } catch (e) {}
-      }, 15);
+      }, 10);
     }
 
-    // ==================== 8 大情境音效 API ====================
-    function playClick() {
-      triggerEqVisual('按鍵點擊音');
-      playWavChannel('click', 0.9);
-      playSafeWebAudioTone({ freq: 850, endFreq: 1200, type: 'triangle', duration: 0.07, gainVal: 0.3 });
-    }
-
-    function playStart() {
-      triggerEqVisual('開始挑戰琶音');
-      playWavChannel('start', 1.0);
-      [523.25, 659.25, 783.99, 1046.50].forEach((f, idx) => {
-        playSafeWebAudioTone({ freq: f, type: 'triangle', delay: idx * 0.09, duration: 0.18, gainVal: 0.35 });
-      });
-    }
-
-    function playTick(isUrgent = false) {
-      triggerEqVisual(isUrgent ? '最後1秒急促倒數' : '倒數滴答聲');
-      if (isUrgent) {
-        playWavChannel('tickUrgent', 0.95);
-        playSafeWebAudioTone({ freq: 1500, endFreq: 1100, type: 'triangle', duration: 0.07, gainVal: 0.35 });
-      } else {
-        playWavChannel('tick', 0.8);
-        playSafeWebAudioTone({ freq: 1000, endFreq: 800, type: 'sine', duration: 0.05, gainVal: 0.28 });
-      }
-    }
-
-    function playLock(team = 'red') {
-      triggerEqVisual(team === 'red' ? '紅隊鎖定答案' : '白隊鎖定答案');
-      if (team === 'white') {
-        playWavChannel('lockWhite', 0.95);
-        playSafeWebAudioTone({ freq: 880, endFreq: 1120, type: 'triangle', duration: 0.09, gainVal: 0.35 });
-      } else {
-        playWavChannel('lockRed', 0.95);
-        playSafeWebAudioTone({ freq: 660, endFreq: 880, type: 'triangle', duration: 0.09, gainVal: 0.35 });
-      }
-    }
-
-    function playCorrect(streak = 1, hasFastestBonus = false, speak = true) {
-      triggerEqVisual(hasFastestBonus ? '答對叮咚 + 搶答成功閃亮音' : '答對叮咚和弦');
-      playWavChannel('correct', 1.0);
-
-      const shift = Math.pow(1.04, Math.min(streak - 1, 6));
-      playSafeWebAudioTone({ freq: 587.33 * shift, type: 'triangle', delay: 0, duration: 0.14, gainVal: 0.42 });
-      playSafeWebAudioTone({ freq: 880.00 * shift, type: 'triangle', delay: 0.11, duration: 0.28, gainVal: 0.45 });
-      playSafeWebAudioTone({ freq: 1174.66 * shift, type: 'sine', delay: 0.11, duration: 0.28, gainVal: 0.35 });
-
-      if (hasFastestBonus) {
-        setTimeout(() => playWavChannel('fastest', 1.0), 140);
-      }
-
-      if (speak) {
-        speakPrompt(streak > 1 ? `連對加${streak}分` : '答對了');
-      }
-    }
-
-    function playWrong(isTimeout = false, speak = true) {
-      triggerEqVisual(isTimeout ? '超時未答警示音' : '答錯低音警示音');
-      playWavChannel('wrong', 1.0);
-      playSafeWebAudioTone({ freq: 220, endFreq: 165, type: 'sawtooth', delay: 0, duration: 0.17, gainVal: 0.42 });
-      playSafeWebAudioTone({ freq: 155, endFreq: 110, type: 'square', delay: 0.16, duration: 0.27, gainVal: 0.42 });
-
-      if (speak) {
-        speakPrompt(isTimeout ? '超時未答' : '答錯了');
-      }
-    }
-
-    function playVersusReveal(redCorrect, whiteCorrect, bestStreak = 1, hasFastest = false) {
-      if (redCorrect && whiteCorrect) {
-        playCorrect(bestStreak, hasFastest, false);
-        speakPrompt('雙方都答對');
-      } else if (!redCorrect && !whiteCorrect) {
-        playWrong(false, false);
-        speakPrompt('雙方都失誤');
-      } else {
-        playCorrect(bestStreak, hasFastest, false);
-        setTimeout(() => {
-          playWavChannel('wrong', 0.85);
-        }, 240);
-        speakPrompt(redCorrect ? '紅隊得分' : '白隊得分');
-      }
-    }
-
-    function playVictory(winnerSpeech = '時間到，挑戰完成') {
-      triggerEqVisual('勝利結算號角');
-      playWavChannel('victory', 1.0);
-      [523.25, 659.25, 783.99, 1046.50].forEach((f, idx) => {
-        playSafeWebAudioTone({ freq: f, type: 'triangle', delay: idx * 0.12, duration: 0.35, gainVal: 0.4 });
-      });
-      speakPrompt(winnerSpeech);
-    }
-
-    // 首頁面板：測試答對 / 答錯音效按鈕
-    function testSoundEffect(type) {
-      if (!soundEnabled) {
-        toggleSound();
-      }
-      unlockWebAudio();
+    function testAudioWithFeedback(type) {
+      soundMuted = false;
+      updateSoundIcons();
       if (type === 'correct') {
-        playCorrect(2, true, true);
+        playSoundEffect('correctSpeed');
+        speakText('音效測試正常');
       } else {
-        playWrong(false, true);
+        playSoundEffect('wrong');
+        speakText('答錯音效正常');
       }
     }
 
-    // 調整主音量拉桿
-    function updateMasterVolume(val) {
-      masterVolume = Number(val) / 100;
-      const label = document.getElementById('volume-label');
-      if (label) label.textContent = `${val}%`;
-    }
-
-    // 切換語音播報輔助
-    function toggleVoice() {
-      voiceEnabled = !voiceEnabled;
-      const textHome = document.getElementById('text-voice-home');
-      const iconGame = document.getElementById('icon-voice-game');
-      if (voiceEnabled) {
-        if (textHome) textHome.textContent = '🗣️ 語音：開';
-        if (iconGame) iconGame.textContent = '🗣️開';
-        speakPrompt('語音播報已開啟');
-      } else {
-        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-        if (textHome) textHome.textContent = '🗣️ 語音：關';
-        if (iconGame) iconGame.textContent = '🗣️關';
-        playClick();
-      }
-    }
-
-    // 切換全螢幕 (支援觸屏大屏與平板)
-    function toggleFullscreen() {
-      playClick();
-      try {
-        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-          const docEl = document.documentElement;
-          if (docEl.requestFullscreen) {
-            docEl.requestFullscreen().catch(() => {});
-          } else if (docEl.webkitRequestFullscreen) {
-            docEl.webkitRequestFullscreen();
-          }
-        } else {
-          if (document.exitFullscreen) {
-            document.exitFullscreen().catch(() => {});
-          } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-          }
+    function toggleVoiceReadout() {
+      unlockAndInitAudio();
+      voiceReadoutEnabled = !voiceReadoutEnabled;
+      const btnHome = document.getElementById('voiceToggleBtn');
+      const btnHeader = document.getElementById('voiceBtnHeader');
+      if (voiceReadoutEnabled) {
+        if (btnHome) {
+          btnHome.textContent = '🗣️ 語音：開';
+          btnHome.className = 'px-2.5 py-2 rounded-xl bg-white hover:bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-200 transition';
         }
-      } catch (e) {}
-    }
-
-    function updateFullscreenIcons() {
-      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
-      ['icon-fullscreen-home', 'icon-fullscreen-game'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.className = isFs ? 'fa-solid fa-compress text-xs sm:text-sm' : 'fa-solid fa-expand text-xs sm:text-sm';
+        if (btnHeader) {
+          btnHeader.textContent = '🗣️開';
+          btnHeader.className = 'px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-amber-300 transition';
         }
-      });
-    }
-    document.addEventListener('fullscreenchange', updateFullscreenIcons);
-    document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
-
-    // 切換總音效開關
-    function toggleSound() {
-      soundEnabled = !soundEnabled;
-      const iconHome = document.getElementById('icon-sound-home');
-      const textHome = document.getElementById('text-sound-home');
-      const iconGame = document.getElementById('icon-sound-game');
-      const statusDot = document.getElementById('audio-status-dot');
-      const statusText = document.getElementById('audio-status-text');
-
-      if (soundEnabled) {
-        unlockWebAudio();
-        if (iconHome) iconHome.className = 'fa-solid fa-volume-high';
-        if (textHome) textHome.textContent = '🔊 音效：開';
-        if (iconGame) iconGame.className = 'fa-solid fa-volume-high text-xs sm:text-sm';
-        if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0';
-        if (statusText) {
-          statusText.className = 'font-black text-xs sm:text-sm text-emerald-300';
-          statusText.textContent = '🟢 音效引擎就緒（WAV實體音檔 + WebAudio 雙引擎）';
-        }
-        playClick();
+        speakText('語音已開啟');
       } else {
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-        if (iconHome) iconHome.className = 'fa-solid fa-volume-xmark';
-        if (textHome) textHome.textContent = '🔇 音效：關';
-        if (iconGame) iconGame.className = 'fa-solid fa-volume-xmark text-xs sm:text-sm text-rose-400';
-        if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0';
-        if (statusText) {
-          statusText.className = 'font-black text-xs sm:text-sm text-rose-300';
-          statusText.textContent = '🔴 目前為靜音狀態（點擊按鈕即可恢復聲音）';
+        if (btnHome) {
+          btnHome.textContent = '🗣️ 語音：關';
+          btnHome.className = 'px-2.5 py-2 rounded-xl bg-white hover:bg-indigo-100 text-slate-600 font-bold text-xs border border-indigo-200 transition';
         }
+        if (btnHeader) {
+          btnHeader.textContent = '🗣️關';
+          btnHeader.className = 'px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-400 transition';
+        }
+      }
+      playSoundEffect('click');
+    }
+
+    function updateSoundIcons() {
+      const onIcon = document.getElementById('soundOnIcon');
+      const offIcon = document.getElementById('soundOffIcon');
+      if (onIcon && offIcon) {
+        onIcon.classList.toggle('hidden', soundMuted);
+        offIcon.classList.toggle('hidden', !soundMuted);
       }
     }
 
-    // 立即初始化 WAV 實體音檔庫
-    initPcmWavBank();
+    function toggleMute() {
+      soundMuted = !soundMuted;
+      if (soundMuted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+      updateSoundIcons();
+      if (!soundMuted) playSoundEffect('click');
+    }
 
-    /**************************************************************
-     * 3. 遊戲全域狀態管理
-     **************************************************************/
+    // ==================== 3. 遊戲全域狀態 ====================
     let gameConfig = {
-      title: "丹青極速決",
-      mode: "single",     // 'single' | 'versus'
-      durationSec: 60     // 60 | 180 | 300
+      mode: 'solo',
+      durationSec: 60
     };
 
     let gameState = {
-      isRunning: false,
-      questionIndex: 0,
-      remainingGlobalSec: 60,
+      isPlaying: false,
+      remainingGameSec: 60,
       globalIntervalId: null,
-
-      // 洗牌題庫袋，避免連續出現重複題目
-      questionBag: [],
+      questionIndex: 0,
+      questionQueue: [],
       currentQuestion: null,
-      currentOptions: [], // [{ answerText, bgColor, group, isCorrect }, ...]
-      correctOptionIndex: 0,
+      currentOptions: [],
+      correctOptionIdx: 0,
 
-      // 單題3秒倒數計時
-      questionPhase: 'answering', // 'answering' | 'feedback'
-      questionStartTimeMs: 0,
-      feedbackShownAtMs: 0,
-      questionDurationMs: 3000,
-      questionRafId: null,
-      lastTickSec: 3,
+      qStartTime: 0,
+      qRafId: null,
+      qResolved: false,
+      lastTickSecond: 3,
 
-      // 【一人遊戲】計分狀態
-      single: {
+      solo: {
         score: 0,
         correctStreak: 0,
         wrongStreak: 0,
-        maxCorrectStreak: 0,
-        totalAnswered: 0,
-        totalCorrect: 0
+        correctCount: 0,
+        maxStreak: 0
       },
 
-      // 【兩人對戰】紅隊與白隊獨立計分狀態
-      versus: {
-        red: {
-          score: 0,
-          correctStreak: 0,
-          wrongStreak: 0,
-          maxCorrectStreak: 0,
-          totalCorrect: 0,
-          fastestCount: 0,
-          answered: false,
-          choiceIndex: null,
-          timeMs: null
-        },
-        white: {
-          score: 0,
-          correctStreak: 0,
-          wrongStreak: 0,
-          maxCorrectStreak: 0,
-          totalCorrect: 0,
-          fastestCount: 0,
-          answered: false,
-          choiceIndex: null,
-          timeMs: null
-        }
+      red: {
+        score: 0,
+        correctStreak: 0,
+        wrongStreak: 0,
+        correctCount: 0,
+        maxStreak: 0,
+        answered: false,
+        choiceIdx: null,
+        answerTimeMs: null
+      },
+      white: {
+        score: 0,
+        correctStreak: 0,
+        wrongStreak: 0,
+        correctCount: 0,
+        maxStreak: 0,
+        answered: false,
+        choiceIdx: null,
+        answerTimeMs: null
       }
     };
 
-    /**************************************************************
-     * 4. 首頁互動設定 (模式選擇、時間選擇、題庫預覽)
-     **************************************************************/
+    // ==================== 4. 首頁設定切換 ====================
     function selectMode(mode) {
+      playSoundEffect('click');
       gameConfig.mode = mode;
-      const btnSingle = document.getElementById('mode-btn-single');
-      const btnVersus = document.getElementById('mode-btn-versus');
-      const badgeSingle = document.getElementById('badge-mode-single');
-      const badgeVersus = document.getElementById('badge-mode-versus');
+      const soloBtn = document.getElementById('modeBtnSolo');
+      const versusBtn = document.getElementById('modeBtnVersus');
+      const soloCheck = document.getElementById('modeSoloCheck');
+      const versusCheck = document.getElementById('modeVersusCheck');
 
-      if (mode === 'single') {
-        btnSingle.className = 'mode-card group relative rounded-2xl p-3 sm:p-4 text-left border-2 border-indigo-600 bg-indigo-50/80 transition-all flex flex-col justify-between active:scale-95';
-        btnVersus.className = 'mode-card group relative rounded-2xl p-3 sm:p-4 text-left border-2 border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between active:scale-95';
-        badgeSingle.classList.remove('hidden');
-        badgeVersus.classList.add('hidden');
+      if (mode === 'solo') {
+        soloBtn.className = "mode-btn group p-3 rounded-2xl border-2 border-slate-900 bg-slate-900 text-white text-left transition-all flex flex-col justify-between shadow-md";
+        versusBtn.className = "mode-btn group p-3 rounded-2xl border-2 border-stone-200 bg-white text-slate-800 hover:border-slate-400 text-left transition-all flex flex-col justify-between";
+        soloCheck.className = "w-4 h-4 rounded-full bg-emerald-400 text-slate-900 flex items-center justify-center text-[10px] font-black";
+        versusCheck.className = "w-4 h-4 rounded-full bg-stone-200 text-transparent flex items-center justify-center text-[10px] font-black";
       } else {
-        btnVersus.className = 'mode-card group relative rounded-2xl p-3 sm:p-4 text-left border-2 border-rose-600 bg-rose-50/80 transition-all flex flex-col justify-between active:scale-95';
-        btnSingle.className = 'mode-card group relative rounded-2xl p-3 sm:p-4 text-left border-2 border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between active:scale-95';
-        badgeVersus.classList.remove('hidden');
-        badgeSingle.classList.add('hidden');
+        versusBtn.className = "mode-btn group p-3 rounded-2xl border-2 border-slate-900 bg-slate-900 text-white text-left transition-all flex flex-col justify-between shadow-md";
+        soloBtn.className = "mode-btn group p-3 rounded-2xl border-2 border-stone-200 bg-white text-slate-800 hover:border-slate-400 text-left transition-all flex flex-col justify-between";
+        versusCheck.className = "w-4 h-4 rounded-full bg-emerald-400 text-slate-900 flex items-center justify-center text-[10px] font-black";
+        soloCheck.className = "w-4 h-4 rounded-full bg-stone-200 text-transparent flex items-center justify-center text-[10px] font-black";
       }
-      playClick();
     }
 
-    function selectDuration(seconds) {
-      gameConfig.durationSec = seconds;
-      [60, 180, 300].forEach(sec => {
-        const btn = document.getElementById(`time-btn-${sec}`);
-        const numDiv = btn.children[0];
-        const subDiv = btn.children[1];
-        if (sec === seconds) {
-          btn.className = 'time-card rounded-2xl p-2.5 sm:p-3.5 text-center border-2 border-emerald-600 bg-emerald-50/80 transition-all active:scale-95';
-          numDiv.className = 'text-xl sm:text-3xl font-black text-emerald-800';
-          subDiv.className = 'text-[11px] sm:text-xs font-bold text-emerald-700 mt-0.5';
+    function selectDuration(sec) {
+      playSoundEffect('click');
+      gameConfig.durationSec = sec;
+      [60, 180, 300].forEach(t => {
+        const btn = document.getElementById(`timeBtn${t}`);
+        if (t === sec) {
+          btn.className = "time-btn rounded-2xl border-2 border-slate-900 bg-slate-900 text-white font-black py-2.5 px-2 flex flex-col items-center justify-center transition-all shadow-md";
         } else {
-          btn.className = 'time-card rounded-2xl p-2.5 sm:p-3.5 text-center border-2 border-slate-200 bg-white hover:border-slate-300 transition-all active:scale-95';
-          numDiv.className = 'text-xl sm:text-3xl font-black text-slate-800';
-          subDiv.className = 'text-[11px] sm:text-xs font-bold text-slate-500 mt-0.5';
+          btn.className = "time-btn rounded-2xl border-2 border-stone-200 bg-white text-slate-800 hover:border-slate-400 font-black py-2.5 px-2 flex flex-col items-center justify-center transition-all";
         }
       });
-      playClick();
     }
 
-    function renderQuestionBankModal() {
-      const container = document.getElementById('bank-grid-list');
-      container.innerHTML = QUESTION_BANK.map(item => {
-        const isWhite = item.bgColor.toUpperCase() === '#FFFFFF';
-        const textColor = isWhite ? '#1E293B' : '#FFFFFF';
-        return `
-          <div class="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-200 shadow-sm">
-            <div>
-              <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">分組 ${item.group}</span>
-              <div class="font-serif-tc font-black text-lg text-slate-900 mt-1">${formatQuestionHtml(item.question)}</div>
-            </div>
-            <div class="px-3.5 py-2 rounded-xl font-black text-sm shadow-inner border ${isWhite ? 'border-slate-300' : 'border-transparent'}"
-                 style="background-color: ${item.bgColor}; color: ${textColor};">
-              ${item.answerText}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function toggleBankModal(show) {
-      playClick();
-      const modal = document.getElementById('modal-bank');
-      if (show) {
-        renderQuestionBankModal();
-        modal.classList.remove('hidden');
-      } else {
-        modal.classList.add('hidden');
-      }
-    }
-
-    document.getElementById('btn-open-bank').addEventListener('click', () => toggleBankModal(true));
-    document.getElementById('btn-close-bank').addEventListener('click', () => toggleBankModal(false));
-
-    /**************************************************************
-     * 5. 題目抽取與二選一不同分組錯誤選項生成
-     **************************************************************/
+    // ==================== 5. 題目抽選與跨組干擾項邏輯 ====================
     function shuffleArray(arr) {
       const copy = [...arr];
       for (let i = copy.length - 1; i > 0; i--) {
@@ -1557,810 +1088,713 @@
       return copy;
     }
 
-    function drawNextQuestionItem() {
-      if (gameState.questionBag.length === 0) {
-        gameState.questionBag = shuffleArray(QUESTION_BANK);
-        if (
-          gameState.currentQuestion &&
-          gameState.questionBag[0].id === gameState.currentQuestion.id &&
-          gameState.questionBag.length > 1
-        ) {
-          const first = gameState.questionBag.shift();
-          gameState.questionBag.push(first);
+    function getNextQuestionItem() {
+      if (gameState.questionQueue.length === 0) {
+        gameState.questionQueue = shuffleArray(QUESTION_BANK);
+      }
+      return gameState.questionQueue.pop();
+    }
+
+    function buildBinaryOptions(correctItem) {
+      const differentGroupItems = QUESTION_BANK.filter(item => item.group !== correctItem.group);
+      const uniqueDistractorsMap = new Map();
+      differentGroupItems.forEach(item => {
+        const key = `${item.answerText}_${item.bgColor}`;
+        if (!uniqueDistractorsMap.has(key)) {
+          uniqueDistractorsMap.set(key, item);
         }
-      }
-      return gameState.questionBag.shift();
+      });
+      const distractorPool = Array.from(uniqueDistractorsMap.values());
+      const randomDistractor = distractorPool[Math.floor(Math.random() * distractorPool.length)];
+
+      const isCorrectFirst = Math.random() < 0.5;
+      const options = isCorrectFirst
+        ? [correctItem, randomDistractor]
+        : [randomDistractor, correctItem];
+      const correctIdx = isCorrectFirst ? 0 : 1;
+
+      return { options, correctIdx };
     }
 
-    function generateBinaryOptions(correctItem) {
-      // 挑選所有「答案分組 (group)」與正確答案不同的題目作為錯誤選項候選池
-      const wrongCandidates = QUESTION_BANK.filter(item => item.group !== correctItem.group);
-      const randomWrong = wrongCandidates[Math.floor(Math.random() * wrongCandidates.length)];
-
-      const optCorrect = {
-        answerText: correctItem.answerText,
-        bgColor: correctItem.bgColor,
-        group: correctItem.group,
-        isCorrect: true
-      };
-
-      const optWrong = {
-        answerText: randomWrong.answerText,
-        bgColor: randomWrong.bgColor,
-        group: randomWrong.group,
-        isCorrect: false
-      };
-
-      const options = Math.random() < 0.5 ? [optCorrect, optWrong] : [optWrong, optCorrect];
-      const correctIndex = options[0].isCorrect ? 0 : 1;
-
-      return { options, correctIndex };
-    }
-
-    function formatQuestionHtml(rawQuestion) {
-      return rawQuestion.replace(/「([^」]+)」/g, '「<span class="highlight-char">$1</span>」');
-    }
-
-    function applyColorCardStyle(buttonEl, optionData) {
-      const isLightBg = optionData.bgColor.toUpperCase() === '#FFFFFF';
-      buttonEl.style.backgroundColor = optionData.bgColor;
-
-      if (isLightBg) {
-        buttonEl.style.color = '#0F172A';
-        buttonEl.style.borderColor = '#CBD5E1';
-        buttonEl.style.textShadow = 'none';
+    function getContrastTextStyle(hexColor) {
+      const hex = hexColor.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+      if (yiq >= 175) {
+        return {
+          textColor: '#0F172A',
+          textShadow: '0 1px 2px rgba(255,255,255,0.6)',
+          borderColor: '#CBD5E1'
+        };
       } else {
-        buttonEl.style.color = '#FFFFFF';
-        buttonEl.style.borderColor = 'rgba(255, 255, 255, 0.35)';
-        buttonEl.style.textShadow = '0 2px 8px rgba(0, 0, 0, 0.45)';
-      }
-
-      const labelSpan = buttonEl.querySelector('.opt-label');
-      if (labelSpan) {
-        labelSpan.textContent = optionData.answerText;
+        return {
+          textColor: '#FFFFFF',
+          textShadow: '0 2px 6px rgba(0,0,0,0.45)',
+          borderColor: '#FFFFFF'
+        };
       }
     }
 
-    /**************************************************************
-     * 6. 啟動遊戲、總計時器與題目流程控制
-     **************************************************************/
+    function formatPromptHtml(promptText) {
+      return promptText.replace(/「([^」]+)」/g, '「<span class="target-char">$1</span>」');
+    }
+
+    // ==================== 6. 遊戲流程控制 ====================
     function startGame() {
-      stopAllTimers();
+      unlockAndInitAudio();
+      playSoundEffect('start');
       stopConfetti();
-      playStart();
+      updateAppHeight();
 
-      document.getElementById('modal-result').classList.add('hidden');
-      document.getElementById('view-home').classList.add('hidden');
-      document.getElementById('view-game').classList.remove('hidden');
-
-      gameState.isRunning = true;
+      gameState.isPlaying = true;
+      gameState.remainingGameSec = gameConfig.durationSec;
       gameState.questionIndex = 0;
-      gameState.remainingGlobalSec = gameConfig.durationSec;
-      gameState.questionBag = shuffleArray(QUESTION_BANK);
+      gameState.questionQueue = shuffleArray(QUESTION_BANK);
 
-      gameState.single = {
-        score: 0,
-        correctStreak: 0,
-        wrongStreak: 0,
-        maxCorrectStreak: 0,
-        totalAnswered: 0,
-        totalCorrect: 0
-      };
+      gameState.solo = { score: 0, correctStreak: 0, wrongStreak: 0, correctCount: 0, maxStreak: 0 };
+      gameState.red = { score: 0, correctStreak: 0, wrongStreak: 0, correctCount: 0, maxStreak: 0, answered: false, choiceIdx: null, answerTimeMs: null };
+      gameState.white = { score: 0, correctStreak: 0, wrongStreak: 0, correctCount: 0, maxStreak: 0, answered: false, choiceIdx: null, answerTimeMs: null };
 
-      gameState.versus = {
-        red: {
-          score: 0,
-          correctStreak: 0,
-          wrongStreak: 0,
-          maxCorrectStreak: 0,
-          totalCorrect: 0,
-          fastestCount: 0,
-          answered: false,
-          choiceIndex: null,
-          timeMs: null
-        },
-        white: {
-          score: 0,
-          correctStreak: 0,
-          wrongStreak: 0,
-          maxCorrectStreak: 0,
-          totalCorrect: 0,
-          fastestCount: 0,
-          answered: false,
-          choiceIndex: null,
-          timeMs: null
-        }
-      };
+      document.getElementById('homeScreen').classList.add('hidden');
+      document.getElementById('resultModal').classList.add('hidden');
+      const gameScreen = document.getElementById('gameScreen');
+      gameScreen.classList.remove('hidden');
+      gameScreen.classList.add('flex');
 
-      if (gameConfig.mode === 'single') {
-        document.getElementById('arena-single').classList.remove('hidden');
-        document.getElementById('arena-versus').classList.add('hidden');
-        document.getElementById('header-score-single').classList.remove('hidden');
-        document.getElementById('header-score-versus').classList.add('hidden');
-        document.getElementById('header-score-versus').classList.remove('flex');
-        updateSingleScoreUI();
+      const soloArena = document.getElementById('soloArena');
+      const versusArena = document.getElementById('versusArena');
+      const soloHeaderScoreBox = document.getElementById('soloHeaderScoreBox');
+
+      if (gameConfig.mode === 'solo') {
+        soloArena.classList.remove('hidden');
+        soloArena.classList.add('flex');
+        versusArena.classList.add('hidden');
+        versusArena.classList.remove('grid');
+        soloHeaderScoreBox.classList.remove('hidden');
+        soloHeaderScoreBox.classList.add('flex');
+        updateSoloScoreUI();
       } else {
-        document.getElementById('arena-single').classList.add('hidden');
-        document.getElementById('arena-versus').classList.remove('hidden');
-        document.getElementById('header-score-single').classList.add('hidden');
-        document.getElementById('header-score-versus').classList.remove('hidden');
-        document.getElementById('header-score-versus').classList.add('flex');
+        soloArena.classList.add('hidden');
+        soloArena.classList.remove('flex');
+        versusArena.classList.remove('hidden');
+        versusArena.classList.add('grid');
+        soloHeaderScoreBox.classList.add('hidden');
+        soloHeaderScoreBox.classList.remove('flex');
         updateVersusScoreUI();
       }
 
       updateGlobalTimerUI();
-
+      clearInterval(gameState.globalIntervalId);
       gameState.globalIntervalId = setInterval(() => {
-        if (!gameState.isRunning) return;
-        gameState.remainingGlobalSec -= 1;
+        if (!gameState.isPlaying) return;
+        gameState.remainingGameSec--;
         updateGlobalTimerUI();
-
-        if (gameState.remainingGlobalSec <= 0) {
+        if (gameState.remainingGameSec <= 0) {
           endGame();
         }
       }, 1000);
 
-      nextQuestion();
+      loadNewQuestion();
     }
 
     function updateGlobalTimerUI() {
-      const sec = Math.max(0, gameState.remainingGlobalSec);
-      const mins = Math.floor(sec / 60);
-      const remSec = sec % 60;
-      const formatted = `${String(mins).padStart(2, '0')}:${String(remSec).padStart(2, '0')}`;
-      const timerEl = document.getElementById('global-timer-text');
-      timerEl.textContent = formatted;
+      const sec = Math.max(0, gameState.remainingGameSec);
+      const m = String(Math.floor(sec / 60)).padStart(2, '0');
+      const s = String(sec % 60).padStart(2, '0');
+      const timerEl = document.getElementById('globalTimerText');
+      timerEl.textContent = `${m}:${s}`;
 
       if (sec <= 10) {
-        timerEl.className = 'font-mono font-black text-base sm:text-2xl tracking-wider text-rose-400 animate-urgent';
+        timerEl.className = "font-mono text-base sm:text-xl font-black tracking-wider text-rose-400 anim-urgent";
       } else {
-        timerEl.className = 'font-mono font-black text-base sm:text-2xl tracking-wider text-white';
+        timerEl.className = "font-mono text-base sm:text-xl font-black tracking-wider text-white";
       }
 
       const pct = (sec / gameConfig.durationSec) * 100;
-      document.getElementById('global-timer-bar').style.width = `${pct}%`;
+      document.getElementById('globalTimeBar').style.width = `${pct}%`;
     }
 
-    // 「下一題」觸發器
-    function triggerNextQuestion() {
-      if (!gameState.isRunning) return;
-      if (gameState.questionPhase !== 'feedback') return;
-      nextQuestion();
-    }
+    function loadNewQuestion() {
+      if (!gameState.isPlaying) return;
 
-    function nextQuestion() {
-      if (!gameState.isRunning) return;
-      if (gameState.questionIndex > 0) {
-        playClick();
-      }
+      cancelAnimationFrame(gameState.qRafId);
+      gameState.qResolved = false;
+      gameState.questionIndex++;
 
-      if (gameState.questionRafId) {
-        cancelAnimationFrame(gameState.questionRafId);
-        gameState.questionRafId = null;
-      }
+      const qItem = getNextQuestionItem();
+      const { options, correctIdx } = buildBinaryOptions(qItem);
 
-      gameState.questionIndex += 1;
-      document.getElementById('header-question-count').textContent = `第 ${gameState.questionIndex} 題`;
-
-      const qItem = drawNextQuestionItem();
-      const { options, correctIndex } = generateBinaryOptions(qItem);
       gameState.currentQuestion = qItem;
       gameState.currentOptions = options;
-      gameState.correctOptionIndex = correctIndex;
-      gameState.questionPhase = 'answering';
+      gameState.correctOptionIdx = correctIdx;
 
-      const promptEl = document.getElementById('question-prompt-display');
-      promptEl.innerHTML = formatQuestionHtml(qItem.question);
-      promptEl.classList.remove('animate-fade-in-up');
-      void promptEl.offsetWidth;
-      promptEl.classList.add('animate-fade-in-up');
+      document.getElementById('questionCounterBadge').textContent = `第 ${gameState.questionIndex} 題`;
+      document.getElementById('questionPrompt').innerHTML = formatPromptHtml(qItem.prompt);
 
-      if (gameConfig.mode === 'single') {
-        setupSingleQuestionUI();
+      if (gameConfig.mode === 'solo') {
+        setupSoloQuestionUI(options);
       } else {
-        setupVersusQuestionUI();
+        setupVersusQuestionUI(options);
       }
 
       startThreeSecondCountdown();
     }
 
-    function startThreeSecondCountdown() {
-      gameState.questionStartTimeMs = performance.now();
-      gameState.lastTickSec = 3;
-
-      const timerTextEl = document.getElementById('question-timer-text');
-      const timerBadgeEl = document.getElementById('question-timer-badge');
-      const timerBarEl = document.getElementById('question-timer-bar');
-
-      timerBarEl.style.width = '100%';
-      timerBarEl.className = 'h-full rounded-full bg-emerald-500';
-      timerBadgeEl.className = 'flex items-center gap-1 font-mono font-black text-base sm:text-2xl text-emerald-600';
-
-      function tick(now) {
-        if (!gameState.isRunning || gameState.questionPhase !== 'answering') return;
-
-        const elapsed = now - gameState.questionStartTimeMs;
-        const remainingMs = Math.max(0, gameState.questionDurationMs - elapsed);
-        const remainingSec = remainingMs / 1000;
-
-        timerTextEl.textContent = remainingSec.toFixed(1);
-        const pct = (remainingMs / gameState.questionDurationMs) * 100;
-        timerBarEl.style.width = `${pct}%`;
-
-        const ceilSec = Math.ceil(remainingSec);
-        if (ceilSec < gameState.lastTickSec && ceilSec > 0) {
-          gameState.lastTickSec = ceilSec;
-          playTick(ceilSec === 1);
-        }
-
-        if (remainingSec <= 1.0) {
-          timerBarEl.className = 'h-full rounded-full bg-rose-600';
-          timerBadgeEl.className = 'flex items-center gap-1 font-mono font-black text-base sm:text-2xl text-rose-600 animate-urgent';
-        } else if (remainingSec <= 2.0) {
-          timerBarEl.className = 'h-full rounded-full bg-amber-500';
-          timerBadgeEl.className = 'flex items-center gap-1 font-mono font-black text-base sm:text-2xl text-amber-600';
-        }
-
-        if (remainingMs <= 0) {
-          handleQuestionTimeout();
-        } else {
-          gameState.questionRafId = requestAnimationFrame(tick);
-        }
-      }
-
-      gameState.questionRafId = requestAnimationFrame(tick);
+    function applyColorCardStyle(btnEl, textEl, optionData) {
+      const styleInfo = getContrastTextStyle(optionData.bgColor);
+      btnEl.style.backgroundColor = optionData.bgColor;
+      btnEl.style.borderColor = styleInfo.borderColor;
+      btnEl.style.opacity = '1';
+      btnEl.style.filter = 'none';
+      textEl.textContent = optionData.answerText;
+      textEl.style.color = styleInfo.textColor;
+      textEl.style.textShadow = styleInfo.textShadow;
+      btnEl.disabled = false;
+      btnEl.classList.remove('ring-4', 'ring-emerald-400', 'ring-rose-500', 'opacity-40', 'scale-95');
     }
 
-    function handleQuestionTimeout() {
-      if (gameState.questionPhase !== 'answering') return;
-      if (gameConfig.mode === 'single') {
-        resolveSingleAnswer(null);
-      } else {
-        resolveVersusRound();
+    function setupSoloQuestionUI(options) {
+      document.getElementById('soloFeedbackArea').classList.add('hidden');
+      for (let i = 0; i < 2; i++) {
+        const btn = document.getElementById(`soloOpt${i}`);
+        const txt = document.getElementById(`soloOpt${i}Text`);
+        applyColorCardStyle(btn, txt, options[i]);
       }
     }
 
-    /**************************************************************
-     * 7. 【一人遊戲】作答、計分與回饋邏輯
-     **************************************************************/
-    function setupSingleQuestionUI() {
-      document.getElementById('single-feedback-box').classList.add('hidden');
+    function setupVersusQuestionUI(options) {
+      gameState.red.answered = false;
+      gameState.red.choiceIdx = null;
+      gameState.red.answerTimeMs = null;
+
+      gameState.white.answered = false;
+      gameState.white.choiceIdx = null;
+      gameState.white.answerTimeMs = null;
+
+      document.getElementById('redLockedOverlay').classList.add('hidden');
+      document.getElementById('whiteLockedOverlay').classList.add('hidden');
+      document.getElementById('redFeedbackBox').classList.add('hidden');
+      document.getElementById('whiteFeedbackBox').classList.add('hidden');
+      document.getElementById('versusCenterNextWrapper').classList.add('hidden');
 
       for (let i = 0; i < 2; i++) {
-        const btn = document.getElementById(`single-opt-${i}`);
-        btn.disabled = false;
-        btn.classList.remove('animate-pop-success', 'animate-shake-error', 'opacity-40', 'ring-4', 'ring-emerald-400', 'ring-rose-500');
-        applyColorCardStyle(btn, gameState.currentOptions[i]);
+        applyColorCardStyle(document.getElementById(`redOpt${i}`), document.getElementById(`redOpt${i}Text`), options[i]);
+        applyColorCardStyle(document.getElementById(`whiteOpt${i}`), document.getElementById(`whiteOpt${i}Text`), options[i]);
       }
     }
 
-    function handleSingleAnswer(choiceIndex) {
-      if (!gameState.isRunning || gameState.questionPhase !== 'answering') return;
-      resolveSingleAnswer(choiceIndex);
-    }
+    // ==================== 7. 3秒限時倒數計時動畫 ====================
+    function startThreeSecondCountdown() {
+      const DURATION_MS = 3000;
+      gameState.qStartTime = performance.now();
+      gameState.lastTickSecond = 3;
 
-    function resolveSingleAnswer(choiceIndex) {
-      gameState.questionPhase = 'feedback';
-      gameState.feedbackShownAtMs = performance.now();
-      if (gameState.questionRafId) {
-        cancelAnimationFrame(gameState.questionRafId);
-        gameState.questionRafId = null;
-      }
+      const numEl = document.getElementById('questionTimerNumber');
+      const barEl = document.getElementById('questionTimeBar');
+      numEl.textContent = '3.0';
+      barEl.style.width = '100%';
 
-      const btn0 = document.getElementById('single-opt-0');
-      const btn1 = document.getElementById('single-opt-1');
-      btn0.disabled = true;
-      btn1.disabled = true;
+      function frame(now) {
+        if (!gameState.isPlaying || gameState.qResolved) return;
+        const elapsed = now - gameState.qStartTime;
+        const remainMs = Math.max(0, DURATION_MS - elapsed);
+        const remainSec = remainMs / 1000;
 
-      const isTimeout = choiceIndex === null;
-      const isCorrect = !isTimeout && choiceIndex === gameState.correctOptionIndex;
-      const s = gameState.single;
-      s.totalAnswered += 1;
+        numEl.textContent = remainSec.toFixed(1);
+        barEl.style.width = `${(remainMs / DURATION_MS) * 100}%`;
 
-      let deltaScore = 0;
-
-      if (isCorrect) {
-        s.correctStreak += 1;
-        s.wrongStreak = 0;
-        if (s.correctStreak > s.maxCorrectStreak) {
-          s.maxCorrectStreak = s.correctStreak;
+        const ceilSec = Math.ceil(remainSec);
+        if (ceilSec < gameState.lastTickSecond && ceilSec > 0) {
+          gameState.lastTickSecond = ceilSec;
+          playSoundEffect(ceilSec === 1 ? 'tickUrgent' : 'tick');
         }
-        s.totalCorrect += 1;
-        deltaScore = s.correctStreak;
-        s.score += deltaScore;
 
-        playCorrect(s.correctStreak, false, true);
-
-        const chosenBtn = document.getElementById(`single-opt-${choiceIndex}`);
-        chosenBtn.classList.add('animate-pop-success', 'ring-4', 'ring-emerald-400');
-        const otherBtn = document.getElementById(`single-opt-${1 - choiceIndex}`);
-        otherBtn.classList.add('opacity-40');
-      } else {
-        s.wrongStreak += 1;
-        s.correctStreak = 0;
-        deltaScore = -s.wrongStreak;
-        s.score += deltaScore;
-
-        playWrong(isTimeout, true);
-
-        if (!isTimeout) {
-          const chosenBtn = document.getElementById(`single-opt-${choiceIndex}`);
-          chosenBtn.classList.add('animate-shake-error', 'ring-4', 'ring-rose-500');
+        if (remainMs <= 0) {
+          onQuestionTimeout();
         } else {
-          btn0.classList.add('animate-shake-error');
-          btn1.classList.add('animate-shake-error');
+          gameState.qRafId = requestAnimationFrame(frame);
         }
-        const correctBtn = document.getElementById(`single-opt-${gameState.correctOptionIndex}`);
-        correctBtn.classList.add('ring-4', 'ring-emerald-400');
       }
 
-      updateSingleScoreUI();
-      showSingleFeedbackUI(isCorrect, isTimeout, deltaScore);
+      gameState.qRafId = requestAnimationFrame(frame);
     }
 
-    function updateSingleScoreUI() {
-      const s = gameState.single;
-      document.getElementById('single-top-score').textContent = s.score;
-      document.getElementById('single-score-big').textContent = s.score;
-
-      const badge = document.getElementById('single-streak-badge');
-      if (s.correctStreak > 0) {
-        badge.className = 'px-3 py-0.5 rounded-full text-xs sm:text-sm font-black bg-emerald-100 text-emerald-800 border border-emerald-300';
-        badge.textContent = `🔥 連續答對 ${s.correctStreak} 題（下題答對 +${s.correctStreak + 1}）`;
-      } else if (s.wrongStreak > 0) {
-        badge.className = 'px-3 py-0.5 rounded-full text-xs sm:text-sm font-black bg-rose-100 text-rose-800 border border-rose-300';
-        badge.textContent = `⚠️ 連續失誤 ${s.wrongStreak} 題（下題答對回歸 +1）`;
+    function onQuestionTimeout() {
+      if (gameState.qResolved) return;
+      if (gameConfig.mode === 'solo') {
+        resolveSoloTurn(null);
       } else {
-        badge.className = 'px-3 py-0.5 rounded-full text-xs sm:text-sm font-black bg-slate-100 text-slate-700';
-        badge.textContent = '準備作答';
+        resolveVersusTurn();
       }
     }
 
-    function showSingleFeedbackUI(isCorrect, isTimeout, deltaScore) {
-      const box = document.getElementById('single-feedback-box');
-      const icon = document.getElementById('single-fb-icon');
-      const title = document.getElementById('single-fb-title');
-      const deltaEl = document.getElementById('single-fb-delta');
-      const totalEl = document.getElementById('single-fb-total');
-      const swatchEl = document.getElementById('single-fb-swatch');
-      const correctTextEl = document.getElementById('single-fb-correct-text');
-
-      const q = gameState.currentQuestion;
-      const s = gameState.single;
-
-      swatchEl.style.backgroundColor = q.bgColor;
-      correctTextEl.textContent = `${q.answerText}（${q.question}）`;
-      totalEl.textContent = `累積得分：${s.score} 分`;
-
-      if (isCorrect) {
-        box.className = 'absolute inset-x-0 bottom-1 sm:bottom-3 z-30 mx-auto max-w-3xl rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border-4 border-emerald-500 bg-emerald-50/98 shadow-[0_15px_40px_rgba(0,0,0,0.35)] animate-fade-in-up';
-        icon.className = 'w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-xl sm:text-3xl shrink-0 font-black shadow';
-        icon.innerHTML = '<i class="fa-solid fa-check"></i>';
-        title.className = 'text-base sm:text-2xl font-black text-emerald-900';
-        title.textContent = s.correctStreak > 1 ? `太棒了！連對 ${s.correctStreak} 題！` : '回答正確！';
-        deltaEl.className = 'px-2.5 py-0.5 rounded-full text-xs sm:text-base font-black bg-emerald-600 text-white';
-        deltaEl.textContent = `+${deltaScore} 分`;
-      } else {
-        box.className = 'absolute inset-x-0 bottom-1 sm:bottom-3 z-30 mx-auto max-w-3xl rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border-4 border-rose-500 bg-rose-50/98 shadow-[0_15px_40px_rgba(0,0,0,0.35)] animate-fade-in-up';
-        icon.className = 'w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-rose-600 text-white flex items-center justify-center text-xl sm:text-3xl shrink-0 font-black shadow';
-        icon.innerHTML = isTimeout ? '<i class="fa-regular fa-hourglass-half"></i>' : '<i class="fa-solid fa-xmark"></i>';
-        title.className = 'text-base sm:text-2xl font-black text-rose-900';
-        title.textContent = isTimeout ? '超過 3 秒未作答！' : '答錯了！請看正確說明：';
-        deltaEl.className = 'px-2.5 py-0.5 rounded-full text-xs sm:text-base font-black bg-rose-600 text-white';
-        deltaEl.textContent = `${deltaScore} 分`;
-      }
-
-      box.classList.remove('hidden');
+    // ==================== 8. 【一人遊戲】計分與實心不透明回饋 ====================
+    function handleSoloAnswer(choiceIdx) {
+      if (!gameState.isPlaying || gameState.qResolved) return;
+      resolveSoloTurn(choiceIdx);
     }
 
-    /**************************************************************
-     * 8. 【兩人對戰模式】紅白雙隊獨立作答、同步開獎與 +3 搶答獎勵
-     **************************************************************/
-    function setupVersusQuestionUI() {
-      ['red', 'white'].forEach(team => {
-        gameState.versus[team].answered = false;
-        gameState.versus[team].choiceIndex = null;
-        gameState.versus[team].timeMs = null;
+    function resolveSoloTurn(choiceIdx) {
+      gameState.qResolved = true;
+      cancelAnimationFrame(gameState.qRafId);
 
-        document.getElementById(`${team}-lock-banner`).classList.add('hidden');
-        document.getElementById(`${team}-feedback-card`).classList.add('hidden');
-
-        for (let i = 0; i < 2; i++) {
-          const btn = document.getElementById(`${team}-opt-${i}`);
-          btn.disabled = false;
-          btn.classList.remove('animate-pop-success', 'animate-shake-error', 'opacity-40', 'ring-4', 'ring-amber-400', 'ring-emerald-400', 'ring-rose-500');
-          applyColorCardStyle(btn, gameState.currentOptions[i]);
-        }
-      });
-
-      document.getElementById('versus-center-next-wrapper').classList.add('hidden');
-    }
-
-    function handleVersusAnswer(team, choiceIndex) {
-      if (!gameState.isRunning || gameState.questionPhase !== 'answering') return;
-      const teamData = gameState.versus[team];
-
-      if (teamData.answered) return;
-
-      const elapsedMs = performance.now() - gameState.questionStartTimeMs;
-      teamData.answered = true;
-      teamData.choiceIndex = choiceIndex;
-      teamData.timeMs = elapsedMs;
-
-      playLock(team);
-
-      const btn0 = document.getElementById(`${team}-opt-0`);
-      const btn1 = document.getElementById(`${team}-opt-1`);
-      btn0.disabled = true;
-      btn1.disabled = true;
-
-      const chosenBtn = document.getElementById(`${team}-opt-${choiceIndex}`);
-      const otherBtn = document.getElementById(`${team}-opt-${1 - choiceIndex}`);
-      chosenBtn.classList.add('ring-4', 'ring-amber-400');
-      otherBtn.classList.add('opacity-40');
-
-      const lockBanner = document.getElementById(`${team}-lock-banner`);
-      const lockText = document.getElementById(`${team}-lock-text`);
-      lockText.textContent = `已鎖定 (${(elapsedMs / 1000).toFixed(2)}s)，等待開獎...`;
-      lockBanner.classList.remove('hidden');
-
-      if (gameState.versus.red.answered && gameState.versus.white.answered) {
-        resolveVersusRound();
-      }
-    }
-
-    function resolveVersusRound() {
-      if (gameState.questionPhase !== 'answering') return;
-      gameState.questionPhase = 'feedback';
-      gameState.feedbackShownAtMs = performance.now();
-
-      if (gameState.questionRafId) {
-        cancelAnimationFrame(gameState.questionRafId);
-        gameState.questionRafId = null;
-      }
-
-      const red = gameState.versus.red;
-      const white = gameState.versus.white;
-
-      const redCorrect = red.answered && red.choiceIndex === gameState.correctOptionIndex;
-      const whiteCorrect = white.answered && white.choiceIndex === gameState.correctOptionIndex;
-
-      let redFastestBonus = false;
-      let whiteFastestBonus = false;
-
-      if (redCorrect && whiteCorrect) {
-        if (red.timeMs < white.timeMs) {
-          redFastestBonus = true;
-        } else if (white.timeMs < red.timeMs) {
-          whiteFastestBonus = true;
-        } else {
-          redFastestBonus = true;
-          whiteFastestBonus = true;
-        }
-      } else if (redCorrect && !whiteCorrect) {
-        redFastestBonus = true;
-      } else if (whiteCorrect && !redCorrect) {
-        whiteFastestBonus = true;
-      }
-
-      const redDelta = evaluateTeamScore('red', redCorrect, redFastestBonus);
-      const whiteDelta = evaluateTeamScore('white', whiteCorrect, whiteFastestBonus);
-
-      const bestStreak = Math.max(red.correctStreak, white.correctStreak, 1);
-      const hasAnyFastest = redFastestBonus || whiteFastestBonus;
-      playVersusReveal(redCorrect, whiteCorrect, bestStreak, hasAnyFastest);
-
-      renderTeamFeedback('red', redCorrect, !red.answered, redDelta, redFastestBonus);
-      renderTeamFeedback('white', whiteCorrect, !white.answered, whiteDelta, whiteFastestBonus);
-
-      updateVersusScoreUI();
-
-      document.getElementById('versus-center-next-wrapper').classList.remove('hidden');
-    }
-
-    function evaluateTeamScore(teamKey, isCorrect, hasFastestBonus) {
-      const t = gameState.versus[teamKey];
+      const isTimeout = choiceIdx === null;
+      const isCorrect = !isTimeout && choiceIdx === gameState.correctOptionIdx;
+      const s = gameState.solo;
       let delta = 0;
 
       if (isCorrect) {
-        t.correctStreak += 1;
-        t.wrongStreak = 0;
-        if (t.correctStreak > t.maxCorrectStreak) {
-          t.maxCorrectStreak = t.correctStreak;
-        }
-        t.totalCorrect += 1;
-        delta = t.correctStreak;
-        if (hasFastestBonus) {
-          delta += 3;
-          t.fastestCount += 1;
-        }
+        s.correctStreak++;
+        s.wrongStreak = 0;
+        s.correctCount++;
+        if (s.correctStreak > s.maxStreak) s.maxStreak = s.correctStreak;
+        delta = s.correctStreak;
+        s.score += delta;
+        playSoundEffect('correct');
+        speakText(`答對了，加${delta}分`);
       } else {
-        t.wrongStreak += 1;
-        t.correctStreak = 0;
-        delta = -t.wrongStreak;
+        s.wrongStreak++;
+        s.correctStreak = 0;
+        delta = -s.wrongStreak;
+        s.score += delta;
+        playSoundEffect('wrong');
+        const cItem = gameState.currentQuestion;
+        speakText(isTimeout ? `超時，正確答案是${cItem.answerText}` : `答錯了，正確答案是${cItem.answerText}`);
       }
 
-      t.score += delta;
-      return delta;
+      for (let i = 0; i < 2; i++) {
+        const btn = document.getElementById(`soloOpt${i}`);
+        btn.disabled = true;
+        if (i === gameState.correctOptionIdx) {
+          btn.classList.add('ring-4', 'ring-emerald-400');
+        } else {
+          btn.style.opacity = '0.35';
+        }
+      }
+
+      updateSoloScoreUI();
+      showSoloFeedbackCard(isCorrect, isTimeout, delta);
     }
 
-    function renderTeamFeedback(teamKey, isCorrect, isTimeout, deltaScore, hasFastestBonus) {
-      const t = gameState.versus[teamKey];
-      const q = gameState.currentQuestion;
+    function updateSoloScoreUI() {
+      const s = gameState.solo;
+      document.getElementById('soloTotalScore').textContent = s.score;
+      document.getElementById('soloHeaderScore').textContent = s.score;
 
-      document.getElementById(`${teamKey}-lock-banner`).classList.add('hidden');
+      const badge = document.getElementById('soloStreakBadge');
+      if (s.correctStreak > 0) {
+        badge.textContent = `🔥 連續答對 ${s.correctStreak} 題 (下題答對 +${s.correctStreak + 1})`;
+        badge.className = "px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800";
+      } else if (s.wrongStreak > 0) {
+        badge.textContent = `⚠️ 連續失誤 ${s.wrongStreak} 題 (下題答對回歸 +1)`;
+        badge.className = "px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-100 text-rose-800";
+      } else {
+        badge.textContent = "準備作答";
+        badge.className = "px-2.5 py-0.5 rounded-full text-xs font-black bg-stone-100 text-slate-600";
+      }
+    }
 
-      const btn0 = document.getElementById(`${teamKey}-opt-0`);
-      const btn1 = document.getElementById(`${teamKey}-opt-1`);
-      btn0.disabled = true;
-      btn1.disabled = true;
-      btn0.classList.remove('ring-amber-400');
-      btn1.classList.remove('ring-amber-400');
+    function showSoloFeedbackCard(isCorrect, isTimeout, delta) {
+      const area = document.getElementById('soloFeedbackArea');
+      const card = document.getElementById('soloFeedbackCard');
+      const icon = document.getElementById('soloFeedbackIcon');
+      const title = document.getElementById('soloFeedbackTitle');
+      const deltaEl = document.getElementById('soloFeedbackDelta');
+      const totalPill = document.getElementById('soloFeedbackTotalPill');
+      const desc = document.getElementById('soloFeedbackDesc');
+
+      const correctItem = gameState.currentQuestion;
+      const swatchHtml = `<span class="inline-block w-5 h-5 rounded-md border-2 border-slate-400 shadow-sm shrink-0" style="background-color:${correctItem.bgColor};"></span>`;
+
+      area.classList.remove('hidden');
+      card.classList.remove('anim-pop', 'anim-shake');
+      void card.offsetWidth;
+
+      // 強制設定 100% 實心純白底色，絕不透明
+      card.style.backgroundColor = '#FFFFFF';
+      totalPill.textContent = `累積得分：${gameState.solo.score} 分`;
 
       if (isCorrect) {
-        const chosenBtn = document.getElementById(`${teamKey}-opt-${t.choiceIndex}`);
-        chosenBtn.classList.add('animate-pop-success', 'ring-4', 'ring-emerald-400');
+        card.className = "solid-feedback-modal w-full max-w-xl rounded-3xl p-5 sm:p-6 border-4 border-emerald-500 flex flex-col justify-between gap-4 anim-pop";
+        icon.className = "w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl sm:text-3xl font-black shrink-0 shadow-md";
+        icon.textContent = "✓";
+        title.className = "text-lg sm:text-2xl font-black text-emerald-900";
+        title.textContent = gameState.solo.correctStreak > 1 ? `太神了！連續答對 ${gameState.solo.correctStreak} 題！` : "回答正確！";
+        deltaEl.className = "px-3 py-0.5 rounded-full text-sm sm:text-base font-black bg-emerald-600 text-white";
+        deltaEl.textContent = `+${delta} 分`;
+        desc.innerHTML = `正確解答：${swatchHtml}<strong class="text-slate-950">${correctItem.answerText}</strong>（${correctItem.prompt}）`;
       } else {
-        if (!isTimeout && t.choiceIndex !== null) {
-          const chosenBtn = document.getElementById(`${teamKey}-opt-${t.choiceIndex}`);
-          chosenBtn.classList.add('animate-shake-error', 'ring-4', 'ring-rose-500');
+        card.className = "solid-feedback-modal w-full max-w-xl rounded-3xl p-5 sm:p-6 border-4 border-rose-500 flex flex-col justify-between gap-4 anim-shake";
+        icon.className = "w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-rose-600 text-white flex items-center justify-center text-2xl sm:text-3xl font-black shrink-0 shadow-md";
+        icon.textContent = isTimeout ? "⏰" : "✕";
+        title.className = "text-lg sm:text-2xl font-black text-rose-900";
+        title.textContent = isTimeout ? "超過 3 秒未作答！" : "答錯了！請看正確說明：";
+        deltaEl.className = "px-3 py-0.5 rounded-full text-sm sm:text-base font-black bg-rose-600 text-white";
+        deltaEl.textContent = `${delta} 分`;
+        desc.innerHTML = `正確選項說明：${swatchHtml}<strong class="text-rose-700 underline decoration-2">${correctItem.answerText}</strong>（${correctItem.prompt}）`;
+      }
+    }
+
+    // ==================== 9. 【兩人對戰模式】雙隊同時觸控搶答與實心回饋 ====================
+    function bindVersusTouchButtons() {
+      const pairs = [
+        { id: 'redOpt0', team: 'red', idx: 0 },
+        { id: 'redOpt1', team: 'red', idx: 1 },
+        { id: 'whiteOpt0', team: 'white', idx: 0 },
+        { id: 'whiteOpt1', team: 'white', idx: 1 }
+      ];
+      pairs.forEach(({ id, team, idx }) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          handleVersusAnswer(team, idx);
+        });
+      });
+    }
+    bindVersusTouchButtons();
+
+    function handleVersusAnswer(teamKey, choiceIdx) {
+      if (!gameState.isPlaying || gameState.qResolved) return;
+      const team = gameState[teamKey];
+      if (team.answered) return;
+
+      team.answered = true;
+      team.choiceIdx = choiceIdx;
+      team.answerTimeMs = performance.now() - gameState.qStartTime;
+
+      playSoundEffect(teamKey === 'red' ? 'lockRed' : 'lockWhite');
+
+      document.getElementById(`${teamKey}Opt0`).disabled = true;
+      document.getElementById(`${teamKey}Opt1`).disabled = true;
+      document.getElementById(`${teamKey}LockedOverlay`).classList.remove('hidden');
+
+      if (gameState.red.answered && gameState.white.answered) {
+        resolveVersusTurn();
+      }
+    }
+
+    function resolveVersusTurn() {
+      if (gameState.qResolved) return;
+      gameState.qResolved = true;
+      cancelAnimationFrame(gameState.qRafId);
+
+      document.getElementById('redLockedOverlay').classList.add('hidden');
+      document.getElementById('whiteLockedOverlay').classList.add('hidden');
+
+      const redCorrect = gameState.red.answered && gameState.red.choiceIdx === gameState.correctOptionIdx;
+      const whiteCorrect = gameState.white.answered && gameState.white.choiceIdx === gameState.correctOptionIdx;
+
+      let fastestTeam = null;
+      if (redCorrect && whiteCorrect) {
+        fastestTeam = gameState.red.answerTimeMs <= gameState.white.answerTimeMs ? 'red' : 'white';
+      } else if (redCorrect) {
+        fastestTeam = 'red';
+      } else if (whiteCorrect) {
+        fastestTeam = 'white';
+      }
+
+      const redResult = applyTeamScoreCalculation('red', redCorrect, fastestTeam === 'red');
+      const whiteResult = applyTeamScoreCalculation('white', whiteCorrect, fastestTeam === 'white');
+
+      if (redCorrect || whiteCorrect) {
+        playSoundEffect('correctSpeed');
+        if (!redCorrect || !whiteCorrect) {
+          setTimeout(() => playSoundEffect('wrong'), 220);
+        }
+      } else {
+        playSoundEffect('wrong');
+      }
+
+      if (fastestTeam === 'red') {
+        speakText('紅隊搶答成功');
+      } else if (fastestTeam === 'white') {
+        speakText('白隊搶答成功');
+      } else {
+        speakText(`正確答案是${gameState.currentQuestion.answerText}`);
+      }
+
+      highlightVersusOptions('red');
+      highlightVersusOptions('white');
+      updateVersusScoreUI();
+
+      renderTeamFeedbackBox('red', redResult);
+      renderTeamFeedbackBox('white', whiteResult);
+
+      document.getElementById('versusCenterNextWrapper').classList.remove('hidden');
+    }
+
+    function applyTeamScoreCalculation(teamKey, isCorrect, isFastestBonus) {
+      const t = gameState[teamKey];
+      const isTimeout = !t.answered;
+      let baseDelta = 0;
+      const bonusDelta = isFastestBonus ? 3 : 0;
+
+      if (isCorrect) {
+        t.correctStreak++;
+        t.wrongStreak = 0;
+        t.correctCount++;
+        if (t.correctStreak > t.maxStreak) t.maxStreak = t.correctStreak;
+        baseDelta = t.correctStreak;
+      } else {
+        t.wrongStreak++;
+        t.correctStreak = 0;
+        baseDelta = -t.wrongStreak;
+      }
+
+      const totalDelta = baseDelta + bonusDelta;
+      t.score += totalDelta;
+
+      return {
+        isCorrect,
+        isTimeout,
+        baseDelta,
+        bonusDelta,
+        totalDelta,
+        totalScore: t.score,
+        streak: isCorrect ? t.correctStreak : t.wrongStreak
+      };
+    }
+
+    function highlightVersusOptions(teamKey) {
+      for (let i = 0; i < 2; i++) {
+        const btn = document.getElementById(`${teamKey}Opt${i}`);
+        btn.disabled = true;
+        if (i === gameState.correctOptionIdx) {
+          btn.classList.add('ring-4', 'ring-emerald-400');
         } else {
-          btn0.classList.add('animate-shake-error');
-          btn1.classList.add('animate-shake-error');
+          btn.style.opacity = '0.35';
         }
       }
-
-      const card = document.getElementById(`${teamKey}-feedback-card`);
-      const badge = document.getElementById(`${teamKey}-fb-badge`);
-      const status = document.getElementById(`${teamKey}-fb-status`);
-      const speedTag = document.getElementById(`${teamKey}-fb-speed`);
-      const deltaEl = document.getElementById(`${teamKey}-fb-delta`);
-      const detailEl = document.getElementById(`${teamKey}-fb-detail`);
-
-      if (hasFastestBonus) {
-        speedTag.classList.remove('hidden');
-      } else {
-        speedTag.classList.add('hidden');
-      }
-
-      if (isCorrect) {
-        card.className = 'rounded-xl sm:rounded-2xl p-2 sm:p-3 border-2 border-emerald-500 bg-emerald-50/95 text-left animate-fade-in-up shrink-0';
-        badge.className = 'w-5 h-5 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-emerald-600 flex items-center justify-center font-black text-xs sm:text-sm text-white shrink-0';
-        badge.innerHTML = '<i class="fa-solid fa-check"></i>';
-        status.className = 'font-black text-xs sm:text-lg text-emerald-900';
-        status.textContent = t.correctStreak > 1 ? `連對 ${t.correctStreak} 題！` : '答對了！';
-        deltaEl.className = 'px-2 py-0.5 rounded-full font-black text-[11px] sm:text-sm bg-emerald-600 text-white';
-        deltaEl.textContent = `+${deltaScore} 分`;
-
-        const timeStr = (t.timeMs / 1000).toFixed(2);
-        detailEl.innerHTML = `
-          <span>${timeStr}s</span>
-          <span>•</span>
-          <span>+${t.correctStreak}${hasFastestBonus ? '(搶答+3)' : ''}</span>
-          <span>•</span>
-          <span class="font-black text-emerald-900">累積：${t.score}分</span>
-        `;
-      } else {
-        card.className = 'rounded-xl sm:rounded-2xl p-2 sm:p-3 border-2 border-rose-500 bg-rose-50/95 text-left animate-fade-in-up shrink-0';
-        badge.className = 'w-5 h-5 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-rose-600 flex items-center justify-center font-black text-xs sm:text-sm text-white shrink-0';
-        badge.innerHTML = isTimeout ? '<i class="fa-regular fa-clock"></i>' : '<i class="fa-solid fa-xmark"></i>';
-        status.className = 'font-black text-xs sm:text-lg text-rose-900';
-        status.textContent = isTimeout ? '超時未答！' : '答錯了！';
-        deltaEl.className = 'px-2 py-0.5 rounded-full font-black text-[11px] sm:text-sm bg-rose-600 text-white';
-        deltaEl.textContent = `${deltaScore} 分`;
-
-        detailEl.innerHTML = `
-          <span>正確：</span>
-          <span class="inline-block w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border border-slate-400 shrink-0" style="background-color:${q.bgColor};"></span>
-          <span class="font-black text-slate-900">${q.answerText}</span>
-          <span>•</span>
-          <span class="font-black text-rose-900">累積：${t.score}分</span>
-        `;
-      }
-
-      card.classList.remove('hidden');
     }
 
     function updateVersusScoreUI() {
-      const red = gameState.versus.red;
-      const white = gameState.versus.white;
+      document.getElementById('redTotalScore').textContent = gameState.red.score;
+      document.getElementById('whiteTotalScore').textContent = gameState.white.score;
 
-      document.getElementById('versus-top-red').textContent = red.score;
-      document.getElementById('versus-top-white').textContent = white.score;
-      document.getElementById('red-score-display').textContent = red.score;
-      document.getElementById('white-score-display').textContent = white.score;
-
-      const redStreakEl = document.getElementById('red-streak-text');
-      if (red.correctStreak > 0) {
-        redStreakEl.textContent = `🔥 連續答對 ${red.correctStreak} 題`;
-      } else if (red.wrongStreak > 0) {
-        redStreakEl.textContent = `⚠️ 連續失誤 ${red.wrongStreak} 題`;
+      const rBadge = document.getElementById('redStreakBadge');
+      if (gameState.red.correctStreak > 0) {
+        rBadge.textContent = `🔥連對 ${gameState.red.correctStreak}`;
+        rBadge.className = "hidden sm:inline-block px-2 py-0.5 rounded-full text-[11px] font-black bg-emerald-200 text-emerald-950";
+      } else if (gameState.red.wrongStreak > 0) {
+        rBadge.textContent = `⚠️連錯 ${gameState.red.wrongStreak}`;
+        rBadge.className = "hidden sm:inline-block px-2 py-0.5 rounded-full text-[11px] font-black bg-rose-200 text-rose-950";
       } else {
-        redStreakEl.textContent = '準備搶答';
+        rBadge.textContent = "準備";
+        rBadge.className = "hidden sm:inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-200/80 text-rose-900";
       }
 
-      const whiteStreakEl = document.getElementById('white-streak-text');
-      if (white.correctStreak > 0) {
-        whiteStreakEl.textContent = `🔥 連續答對 ${white.correctStreak} 題`;
-      } else if (white.wrongStreak > 0) {
-        whiteStreakEl.textContent = `⚠️ 連續失誤 ${white.wrongStreak} 題`;
+      const wBadge = document.getElementById('whiteStreakBadge');
+      if (gameState.white.correctStreak > 0) {
+        wBadge.textContent = `🔥連對 ${gameState.white.correctStreak}`;
+        wBadge.className = "hidden sm:inline-block px-2 py-0.5 rounded-full text-[11px] font-black bg-emerald-200 text-emerald-950";
+      } else if (gameState.white.wrongStreak > 0) {
+        wBadge.textContent = `⚠️連錯 ${gameState.white.wrongStreak}`;
+        wBadge.className = "hidden sm:inline-block px-2 py-0.5 rounded-full text-[11px] font-black bg-rose-200 text-rose-950";
       } else {
-        whiteStreakEl.textContent = '準備搶答';
+        wBadge.textContent = "準備";
+        wBadge.className = "hidden sm:inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700";
       }
     }
 
-    /**************************************************************
-     * 9. 遊戲時間結束、勝負判定與禮花祝賀動畫
-     **************************************************************/
-    function stopAllTimers() {
-      gameState.isRunning = false;
-      if (gameState.globalIntervalId) {
-        clearInterval(gameState.globalIntervalId);
-        gameState.globalIntervalId = null;
+    function renderTeamFeedbackBox(teamKey, res) {
+      const box = document.getElementById(`${teamKey}FeedbackBox`);
+      const inner = document.getElementById(`${teamKey}FeedbackInner`);
+      const statusEl = document.getElementById(`${teamKey}FeedbackStatus`);
+      const deltaEl = document.getElementById(`${teamKey}FeedbackDelta`);
+      const speedBadge = document.getElementById(`${teamKey}SpeedBonusBadge`);
+      const expEl = document.getElementById(`${teamKey}FeedbackExplanation`);
+      const totalEl = document.getElementById(`${teamKey}FeedbackTotal`);
+
+      const cItem = gameState.currentQuestion;
+      const swatch = `<span class="inline-block w-3.5 h-3.5 rounded align-middle border border-slate-400 mr-1" style="background-color:${cItem.bgColor};"></span>`;
+
+      box.classList.remove('hidden');
+      inner.classList.remove('anim-pop', 'anim-shake');
+      void inner.offsetWidth;
+
+      // 強制 100% 不透明實心白色底色
+      inner.style.backgroundColor = '#FFFFFF';
+      totalEl.textContent = `${res.totalScore} 分`;
+
+      if (res.isCorrect) {
+        inner.className = "solid-feedback-modal w-full rounded-2xl p-3 sm:p-4 border-4 border-emerald-500 flex flex-col justify-between gap-2 anim-pop";
+        statusEl.className = "font-black text-sm sm:text-lg text-emerald-800";
+        statusEl.textContent = res.streak > 1 ? `✓ 連對 ${res.streak} 題！` : "✓ 回答正確！";
+        deltaEl.className = "px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black bg-emerald-600 text-white";
+        deltaEl.textContent = `+${res.totalDelta} 分`;
+
+        if (res.bonusDelta > 0) {
+          speedBadge.classList.remove('hidden');
+        } else {
+          speedBadge.classList.add('hidden');
+        }
+        expEl.innerHTML = `正確：${swatch}<strong>${cItem.answerText}</strong>`;
+      } else {
+        inner.className = "solid-feedback-modal w-full rounded-2xl p-3 sm:p-4 border-4 border-rose-500 flex flex-col justify-between gap-2 anim-shake";
+        statusEl.className = "font-black text-sm sm:text-lg text-rose-800";
+        statusEl.textContent = res.isTimeout ? "⏰ 超時未答！" : "✕ 答錯了！";
+        deltaEl.className = "px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black bg-rose-600 text-white";
+        deltaEl.textContent = `${res.totalDelta} 分`;
+        speedBadge.classList.add('hidden');
+        expEl.innerHTML = `正確選項：${swatch}<strong class="text-rose-700 underline">${cItem.answerText}</strong>（${cItem.prompt}）`;
       }
-      if (gameState.questionRafId) {
-        cancelAnimationFrame(gameState.questionRafId);
-        gameState.questionRafId = null;
-      }
+    }
+
+    // ==================== 10. 下一題與遊戲結束結算 ====================
+    function nextQuestion() {
+      if (!gameState.isPlaying) return;
+      playSoundEffect('click');
+      loadNewQuestion();
     }
 
     function endGame() {
-      stopAllTimers();
+      gameState.isPlaying = false;
+      gameState.qResolved = true;
+      clearInterval(gameState.globalIntervalId);
+      cancelAnimationFrame(gameState.qRafId);
 
-      const modal = document.getElementById('modal-result');
-      const headline = document.getElementById('result-headline');
-      const subline = document.getElementById('result-subline');
-      const bodySingle = document.getElementById('result-body-single');
-      const bodyVersus = document.getElementById('result-body-versus');
-      const trophyBox = document.getElementById('result-trophy-box');
+      playSoundEffect('victory');
+      startConfetti();
 
-      if (gameConfig.mode === 'single') {
-        bodySingle.classList.remove('hidden');
-        bodyVersus.classList.add('hidden');
-
-        const s = gameState.single;
-        trophyBox.className = 'w-20 h-20 sm:w-24 sm:h-24 rounded-3xl mx-auto flex items-center justify-center text-4xl sm:text-5xl shadow-lg mb-4 bg-gradient-to-br from-indigo-500 to-amber-400 text-white';
-        headline.textContent = `單人挑戰總分：${s.score} 分`;
-        headline.className = 'font-serif-tc text-3xl sm:text-5xl font-black text-slate-900 tracking-wide';
-        subline.textContent = `共完成 ${s.totalAnswered} 題，最高連續答對 ${s.maxCorrectStreak} 題！`;
-
-        document.getElementById('res-single-score').textContent = `${s.score} 分`;
-        document.getElementById('res-single-accuracy').textContent = `${s.totalCorrect} / ${s.totalAnswered}`;
-        document.getElementById('res-single-streak').textContent = `${s.maxCorrectStreak} 連勝`;
-
-        playVictory(`時間到，單人挑戰獲得 ${s.score} 分`);
-        startConfetti();
-      } else {
-        bodySingle.classList.add('hidden');
-        bodyVersus.classList.remove('hidden');
-
-        const red = gameState.versus.red;
-        const white = gameState.versus.white;
-
-        document.getElementById('res-red-score').textContent = red.score;
-        document.getElementById('res-red-correct').textContent = red.totalCorrect;
-        document.getElementById('res-red-streak').textContent = red.maxCorrectStreak;
-        document.getElementById('res-red-fast').textContent = red.fastestCount;
-
-        document.getElementById('res-white-score').textContent = white.score;
-        document.getElementById('res-white-correct').textContent = white.totalCorrect;
-        document.getElementById('res-white-streak').textContent = white.maxCorrectStreak;
-        document.getElementById('res-white-fast').textContent = white.fastestCount;
-
-        const winTagRed = document.getElementById('res-winner-tag-red');
-        const winTagWhite = document.getElementById('res-winner-tag-white');
-        const cardRed = document.getElementById('res-card-red');
-        const cardWhite = document.getElementById('res-card-white');
-
-        winTagRed.classList.add('hidden');
-        winTagWhite.classList.add('hidden');
-        cardRed.classList.remove('ring-4', 'ring-amber-400');
-        cardWhite.classList.remove('ring-4', 'ring-amber-400');
-
-        if (red.score > white.score) {
-          headline.textContent = '🎉 恭喜【紅隊】獲勝！';
-          headline.className = 'font-serif-tc text-3xl sm:text-5xl font-black text-rose-600 tracking-wide';
-          subline.textContent = `紅隊以 ${red.score} 分擊敗白隊 ${white.score} 分，奪得「丹青極速決」總冠軍！`;
-          trophyBox.className = 'w-20 h-20 sm:w-24 sm:h-24 rounded-3xl mx-auto flex items-center justify-center text-4xl sm:text-5xl shadow-lg mb-4 bg-gradient-to-br from-rose-500 to-amber-400 text-white animate-bounce';
-          winTagRed.classList.remove('hidden');
-          cardRed.classList.add('ring-4', 'ring-amber-400');
-          playVictory('時間到，恭喜紅隊獲勝');
-        } else if (white.score > red.score) {
-          headline.textContent = '🎉 恭喜【白隊】獲勝！';
-          headline.className = 'font-serif-tc text-3xl sm:text-5xl font-black text-slate-900 tracking-wide';
-          subline.textContent = `白隊以 ${white.score} 分擊敗紅隊 ${red.score} 分，奪得「丹青極速決」總冠軍！`;
-          trophyBox.className = 'w-20 h-20 sm:w-24 sm:h-24 rounded-3xl mx-auto flex items-center justify-center text-4xl sm:text-5xl shadow-lg mb-4 bg-gradient-to-br from-slate-700 to-amber-400 text-white animate-bounce';
-          winTagWhite.classList.remove('hidden');
-          cardWhite.classList.add('ring-4', 'ring-amber-400');
-          playVictory('時間到，恭喜白隊獲勝');
-        } else {
-          headline.textContent = '🤝 勢均力敵・雙方平手！';
-          headline.className = 'font-serif-tc text-3xl sm:text-5xl font-black text-amber-600 tracking-wide';
-          subline.textContent = `紅白兩隊同為 ${red.score} 分，平分秋色！`;
-          trophyBox.className = 'w-20 h-20 sm:w-24 sm:h-24 rounded-3xl mx-auto flex items-center justify-center text-4xl sm:text-5xl shadow-lg mb-4 bg-gradient-to-br from-amber-300 to-amber-500 text-slate-950';
-          playVictory('時間到，雙方平手');
-        }
-
-        startConfetti();
-      }
+      const modal = document.getElementById('resultModal');
+      const winnerTitle = document.getElementById('resultWinnerTitle');
+      const subtitle = document.getElementById('resultSubtitle');
+      const soloStats = document.getElementById('soloResultStats');
+      const versusStats = document.getElementById('versusResultStats');
 
       modal.classList.remove('hidden');
+
+      if (gameConfig.mode === 'solo') {
+        soloStats.classList.remove('hidden');
+        soloStats.classList.add('grid');
+        versusStats.classList.add('hidden');
+        versusStats.classList.remove('grid');
+
+        subtitle.textContent = "丹青極速決・單人挑戰結算";
+        winnerTitle.textContent = `最終得分：${gameState.solo.score} 分`;
+        document.getElementById('finalSoloScore').textContent = gameState.solo.score;
+        document.getElementById('finalSoloAccuracy').textContent = `${gameState.solo.correctCount} / ${gameState.questionIndex}`;
+        document.getElementById('finalSoloMaxStreak').textContent = gameState.solo.maxStreak;
+        speakText(`時間到，最終得分${gameState.solo.score}分`);
+      } else {
+        soloStats.classList.add('hidden');
+        soloStats.classList.remove('grid');
+        versusStats.classList.remove('hidden');
+        versusStats.classList.add('grid');
+
+        const rScore = gameState.red.score;
+        const wScore = gameState.white.score;
+
+        document.getElementById('finalRedScore').textContent = rScore;
+        document.getElementById('finalWhiteScore').textContent = wScore;
+        document.getElementById('finalRedDetail').textContent = `答對 ${gameState.red.correctCount} 題｜最高連對 ${gameState.red.maxStreak}`;
+        document.getElementById('finalWhiteDetail').textContent = `答對 ${gameState.white.correctCount} 題｜最高連對 ${gameState.white.maxStreak}`;
+
+        const redCard = document.getElementById('finalRedCard');
+        const whiteCard = document.getElementById('finalWhiteCard');
+        const redCrown = document.getElementById('finalRedCrown');
+        const whiteCrown = document.getElementById('finalWhiteCrown');
+
+        redCrown.classList.add('hidden');
+        whiteCrown.classList.add('hidden');
+        redCard.className = "rounded-2xl p-3.5 border-2 border-rose-200 bg-rose-50/70 flex flex-col items-center";
+        whiteCard.className = "rounded-2xl p-3.5 border-2 border-slate-200 bg-slate-50 flex flex-col items-center";
+
+        subtitle.textContent = "丹青極速決・紅白對戰最終結果";
+        if (rScore > wScore) {
+          winnerTitle.textContent = "🎉 恭喜【紅隊】獲勝！";
+          winnerTitle.className = "serif-title text-2xl sm:text-4xl font-black text-rose-600 mb-4";
+          redCrown.classList.remove('hidden');
+          redCard.classList.add('ring-4', 'ring-amber-400', 'scale-105');
+          speakText('時間到，恭喜紅隊獲勝');
+        } else if (wScore > rScore) {
+          winnerTitle.textContent = "🎉 恭喜【白隊】獲勝！";
+          winnerTitle.className = "serif-title text-2xl sm:text-4xl font-black text-slate-800 mb-4";
+          whiteCrown.classList.remove('hidden');
+          whiteCard.classList.add('ring-4', 'ring-amber-400', 'scale-105');
+          speakText('時間到，恭喜白隊獲勝');
+        } else {
+          winnerTitle.textContent = "🤝 勢均力敵・雙方平手！";
+          winnerTitle.className = "serif-title text-2xl sm:text-4xl font-black text-amber-600 mb-4";
+          speakText('時間到，雙方平手');
+        }
+      }
+    }
+
+    function confirmExitGame() {
+      playSoundEffect('click');
+      returnToHome();
     }
 
     function returnToHome() {
-      playClick();
-      stopAllTimers();
+      playSoundEffect('click');
+      gameState.isPlaying = false;
+      clearInterval(gameState.globalIntervalId);
+      cancelAnimationFrame(gameState.qRafId);
       stopConfetti();
-      document.getElementById('modal-result').classList.add('hidden');
-      document.getElementById('view-game').classList.add('hidden');
-      document.getElementById('view-home').classList.remove('hidden');
+
+      document.getElementById('resultModal').classList.add('hidden');
+      document.getElementById('gameScreen').classList.add('hidden');
+      document.getElementById('gameScreen').classList.remove('flex');
+      document.getElementById('homeScreen').classList.remove('hidden');
     }
 
-    /**************************************************************
-     * 10. 全螢幕慶祝彩帶禮花動畫 (Confetti Canvas)
-     **************************************************************/
-    let confettiRafId = null;
-    let confettiParticles = [];
+    function replayGame() {
+      startGame();
+    }
 
+    // ==================== 11. 勝利彩帶特效 (Canvas Confetti) ====================
+    let confettiAnimId = null;
     function startConfetti() {
-      const canvas = document.getElementById('confetti-canvas');
+      const canvas = document.getElementById('confettiCanvas');
       canvas.classList.remove('hidden');
+      const ctx = canvas.getContext('2d');
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      const ctx = canvas.getContext('2d');
 
-      const palette = ['#C13221', '#2ACD96', '#1661AB', '#F59E0B', '#EC4899', '#80A492', '#FFFFFF'];
-      confettiParticles = Array.from({ length: 110 }, () => ({
+      const colors = ['#E34234', '#2ACD96', '#1661AB', '#F59E0B', '#EC4899', '#80A492'];
+      const pieces = Array.from({ length: 90 }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height - canvas.height,
-        w: 8 + Math.random() * 8,
-        h: 6 + Math.random() * 6,
-        color: palette[Math.floor(Math.random() * palette.length)],
-        vx: (Math.random() - 0.5) * 3,
-        vy: 2.5 + Math.random() * 4,
-        angle: Math.random() * Math.PI * 2,
-        spin: (Math.random() - 0.5) * 0.15
+        w: Math.random() * 10 + 6,
+        h: Math.random() * 6 + 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        vy: Math.random() * 3.5 + 2,
+        vx: (Math.random() - 0.5) * 2,
+        angle: Math.random() * 360,
+        spin: (Math.random() - 0.5) * 8
       }));
 
-      function renderConfetti() {
+      function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        confettiParticles.forEach(p => {
-          p.x += p.vx;
+        pieces.forEach(p => {
           p.y += p.vy;
+          p.x += p.vx;
           p.angle += p.spin;
-          if (p.y > canvas.height + 20) {
-            p.y = -20;
+          if (p.y > canvas.height) {
+            p.y = -15;
             p.x = Math.random() * canvas.width;
           }
           ctx.save();
           ctx.translate(p.x, p.y);
-          ctx.rotate(p.angle);
+          ctx.rotate((p.angle * Math.PI) / 180);
           ctx.fillStyle = p.color;
           ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
           ctx.restore();
         });
-        confettiRafId = requestAnimationFrame(renderConfetti);
+        confettiAnimId = requestAnimationFrame(render);
       }
-
-      renderConfetti();
+      render();
     }
 
     function stopConfetti() {
-      if (confettiRafId) {
-        cancelAnimationFrame(confettiRafId);
-        confettiRafId = null;
-      }
-      const canvas = document.getElementById('confetti-canvas');
-      canvas.classList.add('hidden');
+      if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+      const canvas = document.getElementById('confettiCanvas');
+      if (canvas) canvas.classList.add('hidden');
     }
-
-    window.addEventListener('resize', () => {
-      const canvas = document.getElementById('confetti-canvas');
-      if (!canvas.classList.contains('hidden')) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      }
-    });
   </script>
 </body>
 </html>
